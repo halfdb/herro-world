@@ -1,9 +1,18 @@
 package main
 
 import (
-	"fmt"
+	"github.com/gin-gonic/gin"
+	"os"
+	"net/http"
 )
 
 func main() {
-	fmt.Println("Herro World!")
+	r := gin.Default()
+	r.Use(gin.Logger())
+	r.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "Herro World!")
+	})
+
+	port := os.Getenv("PORT")
+	r.Run(":" + port)
 }
