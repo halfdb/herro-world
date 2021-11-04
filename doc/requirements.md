@@ -28,7 +28,7 @@ Requirements in multiple aspects.
 | :---: | :------------------------: | :------------------------------------------------------: | :----------------------------------------------: |
 |  [ ]  |       Image messages       |           Images can be sent through messages.           |                                                  |
 |  [ ]  |       Audio messages       |           Audio can be sent through messages.            |                                                  |
-|  [ ]  | Send messages to a Contact |           Able to send messages to a Contact.            | Receivers don't have to have sender in Contacts. |
+|  [ ]  | Send messages to a Contact |           Able to send messages to a Contact.            | Receivers **don't have to** have sender in Contacts in advance. |
 |  [ ]  |       Start a Group        |    Able to choose multiple Contacts to start a Group.    |                                                  |
 |  [ ]  |       Group chatting       | Messages in a Group are sent to all users in this Group. |                                                  |
 |  [ ]  |       Quitting Group       |                A member can quit a Group.                |                                                  |
@@ -40,4 +40,4 @@ Requirements in multiple aspects.
 |  [ ]  | Hidden login name by default |                    Login name is invisible to others by default.                     |       |
 |  [ ]  |  Choice to show login name   |                     Able to choose to show login name to others.                     |       |
 |  [ ]  |      Invisible Contacts      |                      One's Contacts are not visible to others.                       |       |
-|  [ ]  |     End-to-end Security      | Message contents are not readable by any other party including the service provider. |       |
+|  [ ]  |     End-to-end Security      | Message contents are not readable by any other party including the service provider. |    Optional. Depends on progress.   |
