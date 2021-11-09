@@ -13,7 +13,7 @@ CREATE TABLE `user` (
 -- パスワード
 `password` VARCHAR(80) NOT NULL,
 -- ニックネーム
-`nickname` VARCHAR(40),
+`nickname` VARCHAR(40) NOT NULL,
 -- ログインネーム表示設定
 `show_login_name` BOOL NOT NULL DEFAULT false,
 
@@ -77,7 +77,7 @@ CREATE TABLE `user_chat` (
 `joined_at` TIMESTAMP NOT NULL,
 `left_at` TIMESTAMP,
 -- 組み合わせが主キー
-PRIMARY KEY (`uid`, `cid`),
+PRIMARY KEY (`uid`, `cid`)
 -- FOREIGN KEY (`uid`) REFERENCES `user`(`uid`),
 -- FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
 );

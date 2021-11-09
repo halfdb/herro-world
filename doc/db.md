@@ -40,7 +40,7 @@ DBについて、ユーザー、コンタクト、ユーザーの間のチャッ
 | `uid` | INT | AUTO_INCREMENT | 主キー |
 | `login_name` | VARCHAR(40) | ユニーク | ログインネーム |
 | `password` | VARCHAR(80) | | パスワード|
-| `nickname` | VARCHAR(40) | NULL可能 | ニックネーム |
+| `nickname` | VARCHAR(40) | | ニックネーム |
 | `show_login_name` | BOOL | デフォルト値false | ログインネーム表示設定 |
 
 
@@ -53,7 +53,7 @@ CREATE TABLE `user` (
 -- パスワード
 `password` VARCHAR(80) NOT NULL,
 -- ニックネーム
-`nickname` VARCHAR(40),
+`nickname` VARCHAR(40) NOT NULL,
 -- ログインネーム表示設定
 `show_login_name` BOOL NOT NULL DEFAULT false,
 
