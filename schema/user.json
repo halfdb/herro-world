@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "uid": {
+      "type": "integer"
+    },
+    "nickname": {
+      "type": "string"
+    },
+    "show_login_name": {
+      "type": "bool"
+    }
+  }
+}

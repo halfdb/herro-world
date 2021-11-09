@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "mid": {
+      "type": "integer"
+    },
+    "cid": {
+      "type": "integer"
+    },
+    "uid": {
+      "type": "integer",
+      "description": "uid of sender"
+    },
+    "mime_id": {
+      "type": "integer"
+    },
+    "content": {
+      "type": "string",
+      "description": "BASE64 of content"
+    }
+  }
+}
