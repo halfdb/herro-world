@@ -1,0 +1,254 @@
+{
+  "$schema": "https://raw.githubusercontent.com/halfdb/api_generator/main/schema/api_doc.json",
+  "title": "herro-world API設計書",
+  "description": "herro-worldに使うAPIです。",
+  "chapters": [
+    {
+      "title": "共通",
+      "description": "* login以外のAPIにリクエストする時有効なトークンを付けないと`403`が出る\n* 自分の見られないリソース（他人のコンタクトとか）も`403`"
+    },
+    {
+      "title": "アカウント",
+      "description": "アカウント関連のAPI",
+      "list": [
+        {
+          "description": "ログイン",
+          "methods": ["POST"],
+          "params": [
+            "login_name",
+            "password"
+          ],
+          "path": "/login",
+          "returns": [
+            {
+              "description": "成功。トークンを返す",
+              "status_code": 200
+            },
+            403
+          ],
+          "return_example": "{ \"token\": \"token_string\" }"
+        },
+        {
+          "description": "登録",
+          "path": "/users",
+          "methods": ["POST"],
+          "params": [
+            "login_name",
+            "nickname",
+            "password"
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json"
+            },
+            {
+              "status_code": 409,
+              "description": "コンフリクトのため、ユーザー作成できなかった。"
+            }
+          ]
+        },
+        {
+          "description": "ユーザー情報",
+          "methods": ["GET"],
+          "path": "/users/:uid",
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json"
+            }
+          ]
+        },
+        {
+          "description": "自分の情報を更新",
+          "methods": ["POST"],
+          "path": "/users/:uid",
+          "params": [
+            {
+              "key": "nickname",
+              "mandatory": false
+            },
+            {
+              "key": "show_login_name",
+              "mandatory": false
+            },
+            {
+              "key": "password",
+              "mandatory": false
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json"
+            },
+            {
+              "status_code": 400,
+              "description": "`nickname`, `show_login_name`, `password`中の一つ以上を指定ください"
+            },
+            403
+          ]
+        }
+      ]
+    },
+    {
+      "title": "コンタクト管理",
+      "description": "コンタクトを管理するAPI",
+      "list": [
+        {
+          "description": "自分のコンタクトを見る。削除・ブロックされたコンタクトは見られない。",
+          "path": "/users/:uid/contacts",
+          "methods": ["GET"],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contacts.json"
+            },
+            403
+          ]
+        },
+        {
+          "description": "コンタクトにユーザー追加",
+          "path": "/users/:uid/contacts",
+          "methods": ["POST"],
+          "params": [
+            "uid",
+            {
+              "key": "display_name",
+              "mandatory": false
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json"
+            },
+            403
+          ]
+        },
+        {
+          "description": "コンタクトなかの一つを更新。削除・ブロックされたコンタクトは更新できない。",
+          "path": "/users/:uid/contacts/:uid_other",
+          "methods": ["POST"],
+          "params": [
+            {
+              "key": "display_name",
+              "mandatory": false
+            },
+            {
+              "key": "deleted",
+              "mandatory": false,
+              "comment": "trueしか受け入れない"
+            },
+            {
+              "key": "blocked",
+              "mandatory": false,
+              "comment": "trueしか受け入れない"
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "description": "削除・ブロックされてないなら更新したコンタクトを返す。それ以外は空のレスポンスを返す。",
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json"
+            },
+            {
+              "status_code": 400,
+              "description": "`display_name`, `deleted`, `blocked`中の一つ以上を指定ください"
+            },
+            403
+          ]
+        },
+        {
+          "description": "一つのコンタクトを削除。`deleted=true`をPOSTするのと同様。",
+          "path": "/users/:uid/contacts/:uid_other",
+          "methods": ["DELETE"],
+          "returns": [
+            200,
+            403
+          ]
+        }
+      ]
+    },
+    {
+      "title": "チャット",
+      "description": "チャット関連のAPI",
+      "list": [
+        {
+          "description": "チャットリストを見る",
+          "path": "/users/:uid/chats",
+          "methods": ["GET"],
+          "returns": [
+            {
+              "status_code": 200,
+              "description": "自分のチャットの`cid`のリスト"
+            },
+            403
+          ]
+        },
+        {
+          "description": "チャット内のメッセージを見る。最新情報が先の順で。",
+          "path": "/chats/:cid/messages",
+          "methods": ["GET"],
+          "params": [
+            {
+              "key": "page_size",
+              "mandatory": false,
+              "comment": "デフォルト値100。"
+            },
+            {
+              "key": "page_token",
+              "mandatory": false,
+              "comment": "前のレスポンスの`next_page_token`"
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/messages.json"
+            },
+            403
+          ]
+        },
+        {
+          "description": "チャットにメッセージを投稿",
+          "path": "/chats/:cid/messages",
+          "methods": ["POST"],
+          "params": [
+            {
+              "key": "mime_id",
+              "mandatory": false
+            },
+            {
+              "key": "content",
+              "mandatory": true,
+              "comment": "内容のBASE64"
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/message.json"
+            },
+            403
+          ]
+        }
+      ]
+    },
+    {
+      "title": "他",
+      "description": "他のAPI",
+      "list": [
+        {
+          "description": "可能のmimeの一覧",
+          "path": "/mimes",
+          "methods": ["GET"],
+          "returns": [
+            200
+          ],
+          "return_example": "[{100: \"text/plain\"}]"
+        }
+      ]
+    }
+  ]
+}
