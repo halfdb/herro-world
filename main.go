@@ -1,19 +1,29 @@
 package main
 
 import (
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"net/http"
 	"os"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	r := gin.Default()
-	r.Use(gin.Logger())
-	r.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Herro World!")
-	})
+	// Echo instance
+	e := echo.New()
 
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	// Routes
+	e.GET("/", hello)
+
+	// Start server
 	port := os.Getenv("PORT")
-	r.Run(":" + port)
+	e.Logger.Fatal(e.Start(":" + port))
+}
+
+// Handler
+func hello(c echo.Context) error {
+	return c.String(http.StatusOK, "Herro, World!")
 }
