@@ -1,0 +1,251 @@
+{
+  "$schema": "https://raw.githubusercontent.com/halfdb/api_generator/main/schema/api_doc.json",
+  "title": "herro-world API設計書",
+  "description": "Document for Chat APIs",
+  "chapters": [
+    {
+      "title": "Common",
+      "description": "* Accessing APIs other than `/login` without a valid token results in `403`\n* Accessing unauthorized resources (e.g. others' contacts) results in `403` as well"
+    },
+    {
+      "title": "Account",
+      "description": "Account related APIs",
+      "list": [
+        {
+          "description": "Login with login_name and password",
+          "methods": ["POST"],
+          "params": [
+            "login_name",
+            "password"
+          ],
+          "path": "/login",
+          "returns": [
+            {
+              "description": "Successful login. Returns token.",
+              "status_code": 200
+            },
+            403
+          ],
+          "return_example": "{ \"token\": \"token_string\" }"
+        },
+        {
+          "description": "Register",
+          "path": "/users",
+          "methods": ["POST"],
+          "params": [
+            "login_name",
+            "nickname",
+            "password"
+          ],
+          "returns": [
+            200,
+            {
+              "status_code": 409,
+              "description": "Unable to create user due to conflict."
+            }
+          ]
+        },
+        {
+          "description": "Read a user's info.",
+          "methods": ["GET"],
+          "path": "/users/:uid",
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json"
+            }
+          ]
+        },
+        {
+          "description": "Update user info of oneself.",
+          "methods": ["POST"],
+          "path": "/users/:uid",
+          "params": [
+            {
+              "key": "nickname",
+              "mandatory": false
+            },
+            {
+              "key": "show_login_name",
+              "mandatory": false
+            },
+            {
+              "key": "password",
+              "mandatory": false
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json"
+            },
+            {
+              "status_code": 400,
+              "description": "At least one of `nickname`, `show_login_name`, `password` must be specified."
+            },
+            403
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Contact management",
+      "description": "APIs to manage contacts.",
+      "list": [
+        {
+          "description": "View one's contacts. Deleted or blocked contacts are invisible.",
+          "path": "/users/:uid/contacts",
+          "methods": ["GET"],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contacts.json"
+            },
+            403
+          ]
+        },
+        {
+          "description": "Add a user into contact.",
+          "path": "/users/:uid/contacts",
+          "methods": ["POST"],
+          "params": [
+            "uid",
+            {
+              "key": "display_name",
+              "mandatory": false
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json"
+            },
+            403
+          ]
+        },
+        {
+          "description": "Update one of one's contacts. Deleted or blocked contacts cannot be updated.",
+          "path": "/users/:uid/contacts/:uid_other",
+          "methods": ["POST"],
+          "params": [
+            {
+              "key": "display_name",
+              "mandatory": false
+            },
+            {
+              "key": "deleted",
+              "mandatory": false,
+              "comment": "The only allowed value to POST is true."
+            },
+            {
+              "key": "blocked",
+              "mandatory": false,
+              "comment": "The only allowed value to POST is true."
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "description": "The contact if not deleted or blocked. Empty else.",
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json"
+            },
+            {
+              "status_code": 400,
+              "description": "At least one of `display_name`, `deleted`, `blocked` must be specified."
+            },
+            403
+          ]
+        },
+        {
+          "description": "Delete a contact. A shortcut to POST `deleted=true`",
+          "path": "/users/:uid/contacts/:uid_other",
+          "methods": ["DELETE"],
+          "returns": [
+            200,
+            403
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Chatting",
+      "description": "Chatting related APIs",
+      "list": [
+        {
+          "description": "View chat list",
+          "path": "/users/:uid/chats",
+          "methods": ["GET"],
+          "returns": [
+            {
+              "status_code": 200,
+              "description": "Returns a list of `cid`s of the chats that the user is in."
+            },
+            403
+          ]
+        },
+        {
+          "description": "View messages in a chat. Newest messages first by default.",
+          "path": "/chats/:cid/messages",
+          "methods": ["GET"],
+          "params": [
+            {
+              "key": "page_size",
+              "mandatory": false,
+              "comment": "Default 100."
+            },
+            {
+              "key": "page_token",
+              "mandatory": false,
+              "comment": "`next_page_token` from a previous response"
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/messages.json"
+            },
+            403
+          ]
+        },
+        {
+          "description": "Post new message into a chat.",
+          "path": "/chats/:cid/messages",
+          "methods": ["POST"],
+          "params": [
+            {
+              "key": "mime_id",
+              "mandatory": false
+            },
+            {
+              "key": "content",
+              "mandatory": true,
+              "comment": "BASE64 of content."
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/message.json"
+            },
+            403
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Misc",
+      "description": "Other APIs.",
+      "list": [
+        {
+          "description": "List available MIMEs",
+          "path": "/mimes",
+          "methods": ["GET"],
+          "returns": [
+            200
+          ],
+          "return_example": "[{100: \"text/plain\"}]"
+        }
+      ]
+    }
+  ]
+}

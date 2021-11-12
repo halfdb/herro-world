@@ -15,5 +15,11 @@ bin/
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-requirements.*
-!requirements.md
+# Generated documents
+docs/*.html
+docs/*.pdf
+
+sqlboiler.toml
+
+# IDE
+.idea/
