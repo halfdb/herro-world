@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/halfdb/herro-world/internal/pkg/auth"
+	"github.com/halfdb/herro-world/internal/pkg/controller"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"net/http"
 )
 
 func New(address string, ctx context.Context, db *sql.DB) error {
@@ -19,21 +19,17 @@ func New(address string, ctx context.Context, db *sql.DB) error {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.JWTWithConfig(middleware.JWTConfig{
-		Skipper: func(e echo.Context) bool {
-			return (e.Path() == "/login" || e.Path() == "/users") && e.Request().Method == "POST"
-		},
+		Skipper:    auth.Skipper,
 		SigningKey: []byte(auth.GetJWTSecret()),
+		Claims:     &auth.Claims{},
 	}))
+	e.Use(auth.SetAuthedContext)
 
 	// Routes
-	e.GET("/", hello)
+	e.GET("/", controller.Herro)
+	e.POST("/users", auth.Register(ctx, db))
 	e.POST("/login", auth.Validator(ctx, db))
 
 	// Start server
 	return e.Start(address)
-}
-
-// Handler
-func hello(c echo.Context) error {
-	return c.String(http.StatusOK, "Herro, World!")
 }
