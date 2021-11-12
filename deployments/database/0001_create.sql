@@ -82,7 +82,7 @@ CREATE TABLE `message` (
 -- 発信者
 `uid` INT NOT NULL,
 -- 内容のmime
-`mime` VARCHAR(40) NOT NULL DEFAULT "text/plain",
+`mime` VARCHAR(40) NOT NULL DEFAULT 'text/plain',
 -- 内容
 `content` VARBINARY(200) NOT NULL,
 -- 発信したtimestamp
