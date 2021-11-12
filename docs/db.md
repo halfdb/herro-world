@@ -175,25 +175,6 @@ PRIMARY KEY (`uid`, `cid`)
 );
 ```
 
-# `mime`表
-
-メッセージのmimeを記録する表
-
-| フィールド | タイプ | 制約等 | 説明 |
-| --- | --- | --- | --- |
-| `mime_id` | INT | AUTO_INCREMENT | 主キー |
-| `mime` | VARCHAR(40) | ユニーク | |
-
-```mysql
-CREATE TABLE `mime` (
--- 主キー
-`mime_id` INT NOT NULL AUTO_INCREMENT,
-`mime` VARCHAR(40) NOT NULL,
-PRIMARY KEY (`mime_id`),
-UNIQUE (`mime`)
-);
-```
-
 # `message`表
 
 メッセージの表。将来 binary メッセージ対応のため、`content`のタイプは`VARBINARY`、その`mime`も記録される。文字のインコーディングは UTF8。
@@ -205,7 +186,7 @@ UNIQUE (`mime`)
 | `uid` | INT | | 発信者のuid |
 | `mime_id` | INT | | 内容のmime_id |
 | `content` | VARBINARY(200) | | 内容 |
-| `sent_time` | TIMESTAMP | | 発信した時のtimestamp |
+| `created_at` | TIMESTAMP | | 発信した時のtimestamp |
 
 ```mysql
 CREATE TABLE `message` (
@@ -216,13 +197,12 @@ CREATE TABLE `message` (
 -- 発信者
 `uid` INT NOT NULL,
 -- 内容のmime
-`mime_id` INT NOT NULL,
+`mime` VARCHAR(40) NOT NULL DEFAULT "text/plain",
 -- 内容
 `content` VARBINARY(200) NOT NULL,
-`deleted` BOOL NOT NULL DEFAULT false,
 -- 発信したtimestamp
 `created_at` TIMESTAMP NOT NULL,
-`updated_at` TIMESTAMP,
+`updated_at` TIMESTAMP NOT NULL,
 `deleted_at` TIMESTAMP,
 PRIMARY KEY (`mid`)
 );

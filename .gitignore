@@ -16,8 +16,10 @@ bin/
 # vendor/
 
 # Generated documents
-doc/*.html
-doc/*.pdf
+docs/*.html
+docs/*.pdf
+
+sqlboiler.toml
 
 # IDE
 .idea/

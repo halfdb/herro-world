@@ -12,8 +12,8 @@
       "type": "integer",
       "description": "uid of sender"
     },
-    "mime_id": {
-      "type": "integer"
+    "mime": {
+      "type": "string"
     },
     "content": {
       "type": "string",
