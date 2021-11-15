@@ -4,7 +4,6 @@
 package models
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
@@ -106,7 +105,7 @@ type (
 	// This should almost always be used instead of []UserChat.
 	UserChatSlice []*UserChat
 	// UserChatHook is the signature for custom UserChat hook methods
-	UserChatHook func(context.Context, boil.ContextExecutor, *UserChat) error
+	UserChatHook func(boil.Executor, *UserChat) error
 
 	userChatQuery struct {
 		*queries.Query
@@ -146,13 +145,9 @@ var userChatAfterDeleteHooks []UserChatHook
 var userChatAfterUpsertHooks []UserChatHook
 
 // doBeforeInsertHooks executes all "before insert" hooks.
-func (o *UserChat) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doBeforeInsertHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatBeforeInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -161,13 +156,9 @@ func (o *UserChat) doBeforeInsertHooks(ctx context.Context, exec boil.ContextExe
 }
 
 // doBeforeUpdateHooks executes all "before Update" hooks.
-func (o *UserChat) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doBeforeUpdateHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatBeforeUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -176,13 +167,9 @@ func (o *UserChat) doBeforeUpdateHooks(ctx context.Context, exec boil.ContextExe
 }
 
 // doBeforeDeleteHooks executes all "before Delete" hooks.
-func (o *UserChat) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doBeforeDeleteHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatBeforeDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -191,13 +178,9 @@ func (o *UserChat) doBeforeDeleteHooks(ctx context.Context, exec boil.ContextExe
 }
 
 // doBeforeUpsertHooks executes all "before Upsert" hooks.
-func (o *UserChat) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doBeforeUpsertHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatBeforeUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -206,13 +189,9 @@ func (o *UserChat) doBeforeUpsertHooks(ctx context.Context, exec boil.ContextExe
 }
 
 // doAfterInsertHooks executes all "after Insert" hooks.
-func (o *UserChat) doAfterInsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doAfterInsertHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatAfterInsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -221,13 +200,9 @@ func (o *UserChat) doAfterInsertHooks(ctx context.Context, exec boil.ContextExec
 }
 
 // doAfterSelectHooks executes all "after Select" hooks.
-func (o *UserChat) doAfterSelectHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doAfterSelectHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatAfterSelectHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -236,13 +211,9 @@ func (o *UserChat) doAfterSelectHooks(ctx context.Context, exec boil.ContextExec
 }
 
 // doAfterUpdateHooks executes all "after Update" hooks.
-func (o *UserChat) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doAfterUpdateHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatAfterUpdateHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -251,13 +222,9 @@ func (o *UserChat) doAfterUpdateHooks(ctx context.Context, exec boil.ContextExec
 }
 
 // doAfterDeleteHooks executes all "after Delete" hooks.
-func (o *UserChat) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doAfterDeleteHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatAfterDeleteHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -266,13 +233,9 @@ func (o *UserChat) doAfterDeleteHooks(ctx context.Context, exec boil.ContextExec
 }
 
 // doAfterUpsertHooks executes all "after Upsert" hooks.
-func (o *UserChat) doAfterUpsertHooks(ctx context.Context, exec boil.ContextExecutor) (err error) {
-	if boil.HooksAreSkipped(ctx) {
-		return nil
-	}
-
+func (o *UserChat) doAfterUpsertHooks(exec boil.Executor) (err error) {
 	for _, hook := range userChatAfterUpsertHooks {
-		if err := hook(ctx, exec, o); err != nil {
+		if err := hook(exec, o); err != nil {
 			return err
 		}
 	}
@@ -305,17 +268,17 @@ func AddUserChatHook(hookPoint boil.HookPoint, userChatHook UserChatHook) {
 }
 
 // OneG returns a single userChat record from the query using the global executor.
-func (q userChatQuery) OneG(ctx context.Context) (*UserChat, error) {
-	return q.One(ctx, boil.GetContextDB())
+func (q userChatQuery) OneG() (*UserChat, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single userChat record from the query.
-func (q userChatQuery) One(ctx context.Context, exec boil.ContextExecutor) (*UserChat, error) {
+func (q userChatQuery) One(exec boil.Executor) (*UserChat, error) {
 	o := &UserChat{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(ctx, exec, o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -323,7 +286,7 @@ func (q userChatQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Use
 		return nil, errors.Wrap(err, "models: failed to execute a one query for user_chat")
 	}
 
-	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
@@ -331,22 +294,22 @@ func (q userChatQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Use
 }
 
 // AllG returns all UserChat records from the query using the global executor.
-func (q userChatQuery) AllG(ctx context.Context) (UserChatSlice, error) {
-	return q.All(ctx, boil.GetContextDB())
+func (q userChatQuery) AllG() (UserChatSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all UserChat records from the query.
-func (q userChatQuery) All(ctx context.Context, exec boil.ContextExecutor) (UserChatSlice, error) {
+func (q userChatQuery) All(exec boil.Executor) (UserChatSlice, error) {
 	var o []*UserChat
 
-	err := q.Bind(ctx, exec, &o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to UserChat slice")
 	}
 
 	if len(userChatAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(ctx, exec); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -356,18 +319,18 @@ func (q userChatQuery) All(ctx context.Context, exec boil.ContextExecutor) (User
 }
 
 // CountG returns the count of all UserChat records in the query, and panics on error.
-func (q userChatQuery) CountG(ctx context.Context) (int64, error) {
-	return q.Count(ctx, boil.GetContextDB())
+func (q userChatQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all UserChat records in the query.
-func (q userChatQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int64, error) {
+func (q userChatQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count user_chat rows")
 	}
@@ -376,19 +339,19 @@ func (q userChatQuery) Count(ctx context.Context, exec boil.ContextExecutor) (in
 }
 
 // ExistsG checks if the row exists in the table, and panics on error.
-func (q userChatQuery) ExistsG(ctx context.Context) (bool, error) {
-	return q.Exists(ctx, boil.GetContextDB())
+func (q userChatQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q userChatQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool, error) {
+func (q userChatQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if user_chat exists")
 	}
@@ -428,7 +391,7 @@ func (o *UserChat) CidChat(mods ...qm.QueryMod) chatQuery {
 
 // LoadUIDUser allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (userChatL) LoadUIDUser(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUserChat interface{}, mods queries.Applicator) error {
+func (userChatL) LoadUIDUser(e boil.Executor, singular bool, maybeUserChat interface{}, mods queries.Applicator) error {
 	var slice []*UserChat
 	var object *UserChat
 
@@ -476,7 +439,7 @@ func (userChatL) LoadUIDUser(ctx context.Context, e boil.ContextExecutor, singul
 		mods.Apply(query)
 	}
 
-	results, err := query.QueryContext(ctx, e)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load User")
 	}
@@ -495,7 +458,7 @@ func (userChatL) LoadUIDUser(ctx context.Context, e boil.ContextExecutor, singul
 
 	if len(userChatAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+			if err := obj.doAfterSelectHooks(e); err != nil {
 				return err
 			}
 		}
@@ -533,7 +496,7 @@ func (userChatL) LoadUIDUser(ctx context.Context, e boil.ContextExecutor, singul
 
 // LoadCidChat allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (userChatL) LoadCidChat(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUserChat interface{}, mods queries.Applicator) error {
+func (userChatL) LoadCidChat(e boil.Executor, singular bool, maybeUserChat interface{}, mods queries.Applicator) error {
 	var slice []*UserChat
 	var object *UserChat
 
@@ -581,7 +544,7 @@ func (userChatL) LoadCidChat(ctx context.Context, e boil.ContextExecutor, singul
 		mods.Apply(query)
 	}
 
-	results, err := query.QueryContext(ctx, e)
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load Chat")
 	}
@@ -600,7 +563,7 @@ func (userChatL) LoadCidChat(ctx context.Context, e boil.ContextExecutor, singul
 
 	if len(userChatAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+			if err := obj.doAfterSelectHooks(e); err != nil {
 				return err
 			}
 		}
@@ -640,17 +603,17 @@ func (userChatL) LoadCidChat(ctx context.Context, e boil.ContextExecutor, singul
 // Sets o.R.UIDUser to related.
 // Adds o to related.R.UIDUserChats.
 // Uses the global database handle.
-func (o *UserChat) SetUIDUserG(ctx context.Context, insert bool, related *User) error {
-	return o.SetUIDUser(ctx, boil.GetContextDB(), insert, related)
+func (o *UserChat) SetUIDUserG(insert bool, related *User) error {
+	return o.SetUIDUser(boil.GetDB(), insert, related)
 }
 
 // SetUIDUser of the userChat to the related item.
 // Sets o.R.UIDUser to related.
 // Adds o to related.R.UIDUserChats.
-func (o *UserChat) SetUIDUser(ctx context.Context, exec boil.ContextExecutor, insert bool, related *User) error {
+func (o *UserChat) SetUIDUser(exec boil.Executor, insert bool, related *User) error {
 	var err error
 	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -662,12 +625,11 @@ func (o *UserChat) SetUIDUser(ctx context.Context, exec boil.ContextExecutor, in
 	)
 	values := []interface{}{related.UID, o.UID, o.Cid}
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
 	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
 		return errors.Wrap(err, "failed to update local table")
 	}
 
@@ -695,17 +657,17 @@ func (o *UserChat) SetUIDUser(ctx context.Context, exec boil.ContextExecutor, in
 // Sets o.R.CidChat to related.
 // Adds o to related.R.CidUserChats.
 // Uses the global database handle.
-func (o *UserChat) SetCidChatG(ctx context.Context, insert bool, related *Chat) error {
-	return o.SetCidChat(ctx, boil.GetContextDB(), insert, related)
+func (o *UserChat) SetCidChatG(insert bool, related *Chat) error {
+	return o.SetCidChat(boil.GetDB(), insert, related)
 }
 
 // SetCidChat of the userChat to the related item.
 // Sets o.R.CidChat to related.
 // Adds o to related.R.CidUserChats.
-func (o *UserChat) SetCidChat(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Chat) error {
+func (o *UserChat) SetCidChat(exec boil.Executor, insert bool, related *Chat) error {
 	var err error
 	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+		if err = related.Insert(exec, boil.Infer()); err != nil {
 			return errors.Wrap(err, "failed to insert into foreign table")
 		}
 	}
@@ -717,12 +679,11 @@ func (o *UserChat) SetCidChat(ctx context.Context, exec boil.ContextExecutor, in
 	)
 	values := []interface{}{related.Cid, o.UID, o.Cid}
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
 	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+	if _, err = exec.Exec(updateQuery, values...); err != nil {
 		return errors.Wrap(err, "failed to update local table")
 	}
 
@@ -753,13 +714,13 @@ func UserChats(mods ...qm.QueryMod) userChatQuery {
 }
 
 // FindUserChatG retrieves a single record by ID.
-func FindUserChatG(ctx context.Context, uID int, cid int, selectCols ...string) (*UserChat, error) {
-	return FindUserChat(ctx, boil.GetContextDB(), uID, cid, selectCols...)
+func FindUserChatG(uID int, cid int, selectCols ...string) (*UserChat, error) {
+	return FindUserChat(boil.GetDB(), uID, cid, selectCols...)
 }
 
 // FindUserChat retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindUserChat(ctx context.Context, exec boil.ContextExecutor, uID int, cid int, selectCols ...string) (*UserChat, error) {
+func FindUserChat(exec boil.Executor, uID int, cid int, selectCols ...string) (*UserChat, error) {
 	userChatObj := &UserChat{}
 
 	sel := "*"
@@ -772,7 +733,7 @@ func FindUserChat(ctx context.Context, exec boil.ContextExecutor, uID int, cid i
 
 	q := queries.Raw(query, uID, cid)
 
-	err := q.Bind(ctx, exec, userChatObj)
+	err := q.Bind(nil, exec, userChatObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -780,7 +741,7 @@ func FindUserChat(ctx context.Context, exec boil.ContextExecutor, uID int, cid i
 		return nil, errors.Wrap(err, "models: unable to select from user_chat")
 	}
 
-	if err = userChatObj.doAfterSelectHooks(ctx, exec); err != nil {
+	if err = userChatObj.doAfterSelectHooks(exec); err != nil {
 		return userChatObj, err
 	}
 
@@ -788,27 +749,25 @@ func FindUserChat(ctx context.Context, exec boil.ContextExecutor, uID int, cid i
 }
 
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *UserChat) InsertG(ctx context.Context, columns boil.Columns) error {
-	return o.Insert(ctx, boil.GetContextDB(), columns)
+func (o *UserChat) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
 // See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
-func (o *UserChat) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
+func (o *UserChat) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no user_chat provided for insertion")
 	}
 
 	var err error
-	if !boil.TimestampsAreSkipped(ctx) {
-		currTime := time.Now().In(boil.GetLocation())
+	currTime := time.Now().In(boil.GetLocation())
 
-		if o.CreatedAt.IsZero() {
-			o.CreatedAt = currTime
-		}
+	if o.CreatedAt.IsZero() {
+		o.CreatedAt = currTime
 	}
 
-	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
+	if err := o.doBeforeInsertHooks(exec); err != nil {
 		return err
 	}
 
@@ -853,12 +812,11 @@ func (o *UserChat) Insert(ctx context.Context, exec boil.ContextExecutor, column
 	value := reflect.Indirect(reflect.ValueOf(o))
 	vals := queries.ValuesFromMapping(value, cache.valueMapping)
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, cache.query)
-		fmt.Fprintln(writer, vals)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, cache.query)
+		fmt.Fprintln(boil.DebugWriter, vals)
 	}
-	_, err = exec.ExecContext(ctx, cache.query, vals...)
+	_, err = exec.Exec(cache.query, vals...)
 
 	if err != nil {
 		return errors.Wrap(err, "models: unable to insert into user_chat")
@@ -875,12 +833,11 @@ func (o *UserChat) Insert(ctx context.Context, exec boil.ContextExecutor, column
 		o.Cid,
 	}
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, cache.retQuery)
-		fmt.Fprintln(writer, identifierCols...)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, cache.retQuery)
+		fmt.Fprintln(boil.DebugWriter, identifierCols...)
 	}
-	err = exec.QueryRowContext(ctx, cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
+	err = exec.QueryRow(cache.retQuery, identifierCols...).Scan(queries.PtrsFromMapping(value, cache.retMapping)...)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to populate default values for user_chat")
 	}
@@ -892,21 +849,21 @@ CacheNoHooks:
 		userChatInsertCacheMut.Unlock()
 	}
 
-	return o.doAfterInsertHooks(ctx, exec)
+	return o.doAfterInsertHooks(exec)
 }
 
 // UpdateG a single UserChat record using the global executor.
 // See Update for more documentation.
-func (o *UserChat) UpdateG(ctx context.Context, columns boil.Columns) (int64, error) {
-	return o.Update(ctx, boil.GetContextDB(), columns)
+func (o *UserChat) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the UserChat.
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
-func (o *UserChat) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+func (o *UserChat) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	var err error
-	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
+	if err = o.doBeforeUpdateHooks(exec); err != nil {
 		return 0, err
 	}
 	key := makeCacheKey(columns, nil)
@@ -939,13 +896,12 @@ func (o *UserChat) Update(ctx context.Context, exec boil.ContextExecutor, column
 
 	values := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), cache.valueMapping)
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, cache.query)
-		fmt.Fprintln(writer, values)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, cache.query)
+		fmt.Fprintln(boil.DebugWriter, values)
 	}
 	var result sql.Result
-	result, err = exec.ExecContext(ctx, cache.query, values...)
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: unable to update user_chat row")
 	}
@@ -961,19 +917,19 @@ func (o *UserChat) Update(ctx context.Context, exec boil.ContextExecutor, column
 		userChatUpdateCacheMut.Unlock()
 	}
 
-	return rowsAff, o.doAfterUpdateHooks(ctx, exec)
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (q userChatQuery) UpdateAllG(ctx context.Context, cols M) (int64, error) {
-	return q.UpdateAll(ctx, boil.GetContextDB(), cols)
+func (q userChatQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values.
-func (q userChatQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (q userChatQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	queries.SetUpdate(q.Query, cols)
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	result, err := q.Query.Exec(exec)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: unable to update all for user_chat")
 	}
@@ -987,12 +943,12 @@ func (q userChatQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor,
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o UserChatSlice) UpdateAllG(ctx context.Context, cols M) (int64, error) {
-	return o.UpdateAll(ctx, boil.GetContextDB(), cols)
+func (o UserChatSlice) UpdateAllG(cols M) (int64, error) {
+	return o.UpdateAll(boil.GetDB(), cols)
 }
 
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o UserChatSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols M) (int64, error) {
+func (o UserChatSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
 		return 0, nil
@@ -1022,12 +978,11 @@ func (o UserChatSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor,
 		strmangle.SetParamNames("`", "`", 0, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, userChatPrimaryKeyColumns, len(o)))
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, args...)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, sql)
+		fmt.Fprintln(boil.DebugWriter, args...)
 	}
-	result, err := exec.ExecContext(ctx, sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: unable to update all in userChat slice")
 	}
@@ -1040,27 +995,25 @@ func (o UserChatSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor,
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *UserChat) UpsertG(ctx context.Context, updateColumns, insertColumns boil.Columns) error {
-	return o.Upsert(ctx, boil.GetContextDB(), updateColumns, insertColumns)
+func (o *UserChat) UpsertG(updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateColumns, insertColumns)
 }
 
 var mySQLUserChatUniqueColumns = []string{}
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
-func (o *UserChat) Upsert(ctx context.Context, exec boil.ContextExecutor, updateColumns, insertColumns boil.Columns) error {
+func (o *UserChat) Upsert(exec boil.Executor, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no user_chat provided for upsert")
 	}
-	if !boil.TimestampsAreSkipped(ctx) {
-		currTime := time.Now().In(boil.GetLocation())
+	currTime := time.Now().In(boil.GetLocation())
 
-		if o.CreatedAt.IsZero() {
-			o.CreatedAt = currTime
-		}
+	if o.CreatedAt.IsZero() {
+		o.CreatedAt = currTime
 	}
 
-	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
+	if err := o.doBeforeUpsertHooks(exec); err != nil {
 		return err
 	}
 
@@ -1142,12 +1095,11 @@ func (o *UserChat) Upsert(ctx context.Context, exec boil.ContextExecutor, update
 		returns = queries.PtrsFromMapping(value, cache.retMapping)
 	}
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, cache.query)
-		fmt.Fprintln(writer, vals)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, cache.query)
+		fmt.Fprintln(boil.DebugWriter, vals)
 	}
-	_, err = exec.ExecContext(ctx, cache.query, vals...)
+	_, err = exec.Exec(cache.query, vals...)
 
 	if err != nil {
 		return errors.Wrap(err, "models: unable to upsert for user_chat")
@@ -1166,12 +1118,11 @@ func (o *UserChat) Upsert(ctx context.Context, exec boil.ContextExecutor, update
 	}
 	nzUniqueCols = queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), uniqueMap)
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, cache.retQuery)
-		fmt.Fprintln(writer, nzUniqueCols...)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, cache.retQuery)
+		fmt.Fprintln(boil.DebugWriter, nzUniqueCols...)
 	}
-	err = exec.QueryRowContext(ctx, cache.retQuery, nzUniqueCols...).Scan(returns...)
+	err = exec.QueryRow(cache.retQuery, nzUniqueCols...).Scan(returns...)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to populate default values for user_chat")
 	}
@@ -1183,23 +1134,23 @@ CacheNoHooks:
 		userChatUpsertCacheMut.Unlock()
 	}
 
-	return o.doAfterUpsertHooks(ctx, exec)
+	return o.doAfterUpsertHooks(exec)
 }
 
 // DeleteG deletes a single UserChat record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *UserChat) DeleteG(ctx context.Context, hardDelete bool) (int64, error) {
-	return o.Delete(ctx, boil.GetContextDB(), hardDelete)
+func (o *UserChat) DeleteG(hardDelete bool) (int64, error) {
+	return o.Delete(boil.GetDB(), hardDelete)
 }
 
 // Delete deletes a single UserChat record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *UserChat) Delete(ctx context.Context, exec boil.ContextExecutor, hardDelete bool) (int64, error) {
+func (o *UserChat) Delete(exec boil.Executor, hardDelete bool) (int64, error) {
 	if o == nil {
 		return 0, errors.New("models: no UserChat provided for delete")
 	}
 
-	if err := o.doBeforeDeleteHooks(ctx, exec); err != nil {
+	if err := o.doBeforeDeleteHooks(exec); err != nil {
 		return 0, err
 	}
 
@@ -1224,12 +1175,11 @@ func (o *UserChat) Delete(ctx context.Context, exec boil.ContextExecutor, hardDe
 		args = queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), valueMapping)
 	}
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, args...)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, sql)
+		fmt.Fprintln(boil.DebugWriter, args...)
 	}
-	result, err := exec.ExecContext(ctx, sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: unable to delete from user_chat")
 	}
@@ -1239,19 +1189,19 @@ func (o *UserChat) Delete(ctx context.Context, exec boil.ContextExecutor, hardDe
 		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for user_chat")
 	}
 
-	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
+	if err := o.doAfterDeleteHooks(exec); err != nil {
 		return 0, err
 	}
 
 	return rowsAff, nil
 }
 
-func (q userChatQuery) DeleteAllG(ctx context.Context, hardDelete bool) (int64, error) {
-	return q.DeleteAll(ctx, boil.GetContextDB(), hardDelete)
+func (q userChatQuery) DeleteAllG(hardDelete bool) (int64, error) {
+	return q.DeleteAll(boil.GetDB(), hardDelete)
 }
 
 // DeleteAll deletes all matching rows.
-func (q userChatQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor, hardDelete bool) (int64, error) {
+func (q userChatQuery) DeleteAll(exec boil.Executor, hardDelete bool) (int64, error) {
 	if q.Query == nil {
 		return 0, errors.New("models: no userChatQuery provided for delete all")
 	}
@@ -1263,7 +1213,7 @@ func (q userChatQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor,
 		queries.SetUpdate(q.Query, M{"deleted_at": currTime})
 	}
 
-	result, err := q.Query.ExecContext(ctx, exec)
+	result, err := q.Query.Exec(exec)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: unable to delete all from user_chat")
 	}
@@ -1277,19 +1227,19 @@ func (q userChatQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor,
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o UserChatSlice) DeleteAllG(ctx context.Context, hardDelete bool) (int64, error) {
-	return o.DeleteAll(ctx, boil.GetContextDB(), hardDelete)
+func (o UserChatSlice) DeleteAllG(hardDelete bool) (int64, error) {
+	return o.DeleteAll(boil.GetDB(), hardDelete)
 }
 
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o UserChatSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor, hardDelete bool) (int64, error) {
+func (o UserChatSlice) DeleteAll(exec boil.Executor, hardDelete bool) (int64, error) {
 	if len(o) == 0 {
 		return 0, nil
 	}
 
 	if len(userChatBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doBeforeDeleteHooks(ctx, exec); err != nil {
+			if err := obj.doBeforeDeleteHooks(exec); err != nil {
 				return 0, err
 			}
 		}
@@ -1321,12 +1271,11 @@ func (o UserChatSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor,
 		args = append([]interface{}{currTime}, args...)
 	}
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, args)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, sql)
+		fmt.Fprintln(boil.DebugWriter, args)
 	}
-	result, err := exec.ExecContext(ctx, sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: unable to delete all from userChat slice")
 	}
@@ -1338,7 +1287,7 @@ func (o UserChatSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor,
 
 	if len(userChatAfterDeleteHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterDeleteHooks(ctx, exec); err != nil {
+			if err := obj.doAfterDeleteHooks(exec); err != nil {
 				return 0, err
 			}
 		}
@@ -1348,18 +1297,18 @@ func (o UserChatSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor,
 }
 
 // ReloadG refetches the object from the database using the primary keys.
-func (o *UserChat) ReloadG(ctx context.Context) error {
+func (o *UserChat) ReloadG() error {
 	if o == nil {
 		return errors.New("models: no UserChat provided for reload")
 	}
 
-	return o.Reload(ctx, boil.GetContextDB())
+	return o.Reload(boil.GetDB())
 }
 
 // Reload refetches the object from the database
 // using the primary keys with an executor.
-func (o *UserChat) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindUserChat(ctx, exec, o.UID, o.Cid)
+func (o *UserChat) Reload(exec boil.Executor) error {
+	ret, err := FindUserChat(exec, o.UID, o.Cid)
 	if err != nil {
 		return err
 	}
@@ -1370,17 +1319,17 @@ func (o *UserChat) Reload(ctx context.Context, exec boil.ContextExecutor) error 
 
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
-func (o *UserChatSlice) ReloadAllG(ctx context.Context) error {
+func (o *UserChatSlice) ReloadAllG() error {
 	if o == nil {
 		return errors.New("models: empty UserChatSlice provided for reload all")
 	}
 
-	return o.ReloadAll(ctx, boil.GetContextDB())
+	return o.ReloadAll(boil.GetDB())
 }
 
 // ReloadAll refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
-func (o *UserChatSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) error {
+func (o *UserChatSlice) ReloadAll(exec boil.Executor) error {
 	if o == nil || len(*o) == 0 {
 		return nil
 	}
@@ -1398,7 +1347,7 @@ func (o *UserChatSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor
 
 	q := queries.Raw(sql, args...)
 
-	err := q.Bind(ctx, exec, &slice)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in UserChatSlice")
 	}
@@ -1409,21 +1358,20 @@ func (o *UserChatSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor
 }
 
 // UserChatExistsG checks if the UserChat row exists.
-func UserChatExistsG(ctx context.Context, uID int, cid int) (bool, error) {
-	return UserChatExists(ctx, boil.GetContextDB(), uID, cid)
+func UserChatExistsG(uID int, cid int) (bool, error) {
+	return UserChatExists(boil.GetDB(), uID, cid)
 }
 
 // UserChatExists checks if the UserChat row exists.
-func UserChatExists(ctx context.Context, exec boil.ContextExecutor, uID int, cid int) (bool, error) {
+func UserChatExists(exec boil.Executor, uID int, cid int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from `user_chat` where `uid`=? AND `cid`=? and `deleted_at` is null limit 1)"
 
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, uID, cid)
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, sql)
+		fmt.Fprintln(boil.DebugWriter, uID, cid)
 	}
-	row := exec.QueryRowContext(ctx, sql, uID, cid)
+	row := exec.QueryRow(sql, uID, cid)
 
 	err := row.Scan(&exists)
 	if err != nil {

@@ -1,16 +1,18 @@
 package server
 
 import (
-	"context"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/halfdb/herro-world/internal/pkg/auth"
 	"github.com/halfdb/herro-world/internal/pkg/controller"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"net/http"
 )
 
-func New(address string, ctx context.Context, db *sql.DB) error {
+func New(address string, db *sql.DB) error {
+	controller.InitializeController(db)
+
 	// Echo instance
 	e := echo.New()
 	e.Debug = true
@@ -25,10 +27,15 @@ func New(address string, ctx context.Context, db *sql.DB) error {
 	}))
 	e.Use(auth.SetAuthedContext)
 
+	privateGroup := e.Group("/users/:uid/*")
+	privateGroup.Use(auth.AuthorizeSelf(middleware.DefaultSkipper))
+
 	// Routes
 	e.GET("/", controller.Herro)
-	e.POST("/users", auth.Register(ctx, db))
-	e.POST("/login", auth.Validator(ctx, db))
+	e.POST("/users", auth.Register(db))
+	e.POST("/login", auth.Validator(db))
+	e.GET("/users/:uid", controller.GetUserInfo)
+	e.Add(http.MethodPatch, "/users/:uid", controller.PatchUserInfo, auth.AuthorizeSelf(middleware.DefaultSkipper))
 
 	// Start server
 	return e.Start(address)

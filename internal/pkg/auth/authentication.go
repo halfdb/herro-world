@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"database/sql"
 	"github.com/golang-jwt/jwt"
 	"github.com/halfdb/herro-world/internal/pkg/models"
@@ -20,10 +19,6 @@ func GetJWTSecret() string {
 	return jwtSecret
 }
 
-func Skipper(e echo.Context) bool {
-	return (e.Path() == "/login" || e.Path() == "/users") && e.Request().Method == "POST"
-}
-
 type Claims struct {
 	Uid int
 	jwt.StandardClaims
@@ -40,13 +35,13 @@ func signUser(user *models.User) (string, error) {
 	return token.SignedString([]byte(GetJWTSecret()))
 }
 
-func Validator(ctx context.Context, db *sql.DB) echo.HandlerFunc {
+func Validator(db *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Logger().Debug("start validating")
 		loginName := c.QueryParam("login_name")
 		password := c.QueryParam("password")
 		c.Logger().Debug(loginName, password)
-		users, err := models.Users(qm.Where("login_name=? and password=?", loginName, password)).All(ctx, db)
+		users, err := models.Users(qm.Where("login_name=? and password=?", loginName, password)).All(db)
 		if err != nil {
 			return err
 		}
@@ -62,11 +57,12 @@ func Validator(ctx context.Context, db *sql.DB) echo.HandlerFunc {
 
 		return c.JSON(http.StatusOK, echo.Map{
 			"token": signedToken,
+			"uid":   users[0].UID,
 		})
 	}
 }
 
-func Register(ctx context.Context, db *sql.DB) echo.HandlerFunc {
+func Register(db *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		user := &models.User{
 			LoginName: c.QueryParam("login_name"),
@@ -75,7 +71,7 @@ func Register(ctx context.Context, db *sql.DB) echo.HandlerFunc {
 		if nickname := c.QueryParam("nickname"); nickname != "" {
 			user.Nickname = null.StringFrom(nickname)
 		}
-		if err := user.Insert(ctx, db, boil.Infer()); err != nil {
+		if err := user.Insert(db, boil.Infer()); err != nil {
 			return err
 		}
 		signedToken, err := signUser(user)
@@ -85,6 +81,7 @@ func Register(ctx context.Context, db *sql.DB) echo.HandlerFunc {
 
 		return c.JSON(http.StatusOK, echo.Map{
 			"token": signedToken,
+			"uid":   user.UID,
 		})
 	}
 }
