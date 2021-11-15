@@ -12,7 +12,7 @@ func main() {
 	errLogger := log.New(os.Stderr, "", 0)
 
 	serverCtx := context.Background()
-	databaseUrl := os.Getenv("DATABASE_URL")
+	databaseUrl := os.Getenv("DB_STRING")
 	db, err := sql.Open("mysql", databaseUrl)
 	if err != nil {
 		errLogger.Fatal(err)
