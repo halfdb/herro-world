@@ -1,9 +1,4 @@
-drop table if exists `contact`;
-drop table if exists `user_chat`;
-drop table if exists `message`;
-drop table if exists `mime`;
-drop table if exists `chat`;
-drop table if exists `user`;
+-- +goose Up
 
 CREATE TABLE `user` (
 -- 主キー
@@ -93,3 +88,13 @@ PRIMARY KEY (`mid`),
 FOREIGN KEY (`uid`) REFERENCES `user`(`uid`),
 FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
 );
+
+
+-- +goose Down
+
+drop table if exists `contact`;
+drop table if exists `user_chat`;
+drop table if exists `message`;
+drop table if exists `chat`;
+drop table if exists `user`;
+
