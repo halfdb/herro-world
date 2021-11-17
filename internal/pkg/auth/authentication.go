@@ -35,6 +35,8 @@ func signUser(user *models.User) (string, error) {
 	return token.SignedString([]byte(GetJWTSecret()))
 }
 
+// TODO refactoring
+
 func Validator(db *sql.DB) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Logger().Debug("start validating")
@@ -70,6 +72,14 @@ func Register(db *sql.DB) echo.HandlerFunc {
 		}
 		if nickname := c.QueryParam("nickname"); nickname != "" {
 			user.Nickname = null.StringFrom(nickname)
+		}
+
+		count, err := models.Users(models.UserWhere.LoginName.EQ(user.LoginName)).Count(db)
+		if err != nil {
+			return err
+		} else if count > 0 {
+			c.Logger().Info("login name already exists")
+			return c.String(http.StatusConflict, "Login name conflict")
 		}
 		if err := user.Insert(db, boil.Infer()); err != nil {
 			return err

@@ -7,11 +7,12 @@ import (
 	"github.com/halfdb/herro-world/internal/pkg/controller"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"net/http"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 func New(address string, db *sql.DB) error {
-	controller.InitializeController(db)
+	boil.SetDB(db)
+	boil.DebugMode = true
 
 	// Echo instance
 	e := echo.New()
@@ -27,15 +28,20 @@ func New(address string, db *sql.DB) error {
 	}))
 	e.Use(auth.SetAuthedContext)
 
-	privateGroup := e.Group("/users/:uid/*")
-	privateGroup.Use(auth.AuthorizeSelf(middleware.DefaultSkipper))
-
 	// Routes
 	e.GET("/", controller.Herro)
 	e.POST("/users", auth.Register(db))
 	e.POST("/login", auth.Validator(db))
 	e.GET("/users/:uid", controller.GetUserInfo)
-	e.Add(http.MethodPatch, "/users/:uid", controller.PatchUserInfo, auth.AuthorizeSelf(middleware.DefaultSkipper))
+	e.PATCH("/users/:uid", controller.PatchUserInfo, auth.AuthorizeSelf)
+	e.POST("/users/:uid/contacts", controller.PostContacts, auth.AuthorizeSelf)
+	e.GET("/users/:uid/contacts", controller.GetContacts, auth.AuthorizeSelf)
+	e.PATCH("/users/:uid/contacts/:uid_other", controller.PatchContact, auth.AuthorizeSelf)
+	e.DELETE("/users/:uid/contacts/:uid_other", controller.DeleteContact, auth.AuthorizeSelf)
+	e.GET("/users/:uid/chats", controller.GetChats, auth.AuthorizeSelf)
+	// TODO API to get chat info
+	e.GET("/chats/:cid/messages", controller.GetMessages, auth.AuthorizeChatMember)
+	e.POST("/chats/:cid/messages", controller.PostMessage, auth.AuthorizeChatMember)
 
 	// Start server
 	return e.Start(address)

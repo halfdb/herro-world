@@ -1,0 +1,38 @@
+package dao
+
+import (
+	"database/sql"
+	"github.com/halfdb/herro-world/internal/pkg/common"
+	"github.com/halfdb/herro-world/internal/pkg/models"
+	"github.com/halfdb/herro-world/pkg/dto"
+	"github.com/labstack/echo/v4"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+)
+
+func UpdateUser(uid int, updates models.M) error {
+	tx, err := common.BeginTx()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p) // re-throw panic after Rollback
+		} else if err != nil {
+			_ = tx.Rollback() // err is non-nil; don't change it
+		} else {
+			err = tx.Commit() // err is nil; if Commit returns error update err
+		}
+	}()
+	rowsAff, err := models.Users(models.UserWhere.UID.EQ(uid)).UpdateAll(tx, updates)
+	if rowsAff == 0 {
+		return sql.ErrNoRows
+	} else if rowsAff != 1 || err != nil {
+		return echo.ErrInternalServerError
+	}
+	return nil
+}
+
+func FetchUser(uid int, bind *dto.User) error {
+	return models.Users(models.UserWhere.UID.EQ(uid)).Bind(nil, boil.GetDB(), bind)
+}

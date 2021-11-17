@@ -1,9 +1,10 @@
 package auth
 
 import (
+	"database/sql"
 	"github.com/golang-jwt/jwt"
+	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"strconv"
 )
 
@@ -45,20 +46,34 @@ func GetUid(c echo.Context) int {
 }
 
 // AuthorizeSelf asserts the request is authenticated, and checks if the user is authorized for the request
-func AuthorizeSelf(skipper middleware.Skipper) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			if skipper(c) {
-				return next(c)
-			}
-			c.Logger().Debug("check if user is allowed for the path")
-			queryUid := c.Param("uid")
-			tokenUid := strconv.Itoa(GetUid(c))
-			if queryUid != tokenUid {
-				c.Logger().Debug("no, not allowed")
-				return echo.ErrForbidden
-			}
-			return next(c)
+func AuthorizeSelf(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		c.Logger().Debug("check if user is allowed for the path")
+		queryUid := c.Param("uid")
+		tokenUid := strconv.Itoa(GetUid(c))
+		if queryUid != tokenUid {
+			c.Logger().Debug("no, not allowed")
+			return echo.ErrForbidden
 		}
+		return next(c)
+	}
+}
+
+func AuthorizeChatMember(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		uid := GetUid(c)
+		cid := 0
+		err := echo.PathParamsBinder(c).Int("cid", &cid).BindError()
+		if err != nil || cid == 0 {
+			return echo.ErrBadRequest
+		}
+
+		_, err = dao.FetchUserChat(uid, cid, false)
+		if err == sql.ErrNoRows {
+			return echo.ErrForbidden
+		} else if err != nil {
+			return echo.ErrInternalServerError
+		}
+		return next(c)
 	}
 }
