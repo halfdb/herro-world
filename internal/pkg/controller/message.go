@@ -16,15 +16,6 @@ const (
 	keyContent = "content"
 )
 
-func parseCid(c echo.Context) (int, error) {
-	cid := 0
-	err := echo.PathParamsBinder(c).Int(keyCid, &cid).BindError()
-	if err != nil || cid == 0 {
-		return 0, echo.ErrBadRequest
-	}
-	return cid, nil
-}
-
 func convertMessage(message *models.Message) *dto.Message {
 	return &dto.Message{
 		Mid:     message.Mid,
@@ -44,7 +35,7 @@ func convertMessages(messages models.MessageSlice) []*dto.Message {
 }
 
 func GetMessages(c echo.Context) error {
-	cid, err := parseCid(c)
+	cid, err := parsePathInt(c, keyCid)
 	if err != nil {
 		return err
 	}
@@ -60,7 +51,7 @@ func GetMessages(c echo.Context) error {
 func PostMessage(c echo.Context) error {
 	// params
 	uid := auth.GetUid(c)
-	cid, err := parseCid(c)
+	cid, err := parsePathInt(c, keyCid)
 	if err != nil {
 		return err
 	}

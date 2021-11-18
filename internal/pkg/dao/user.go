@@ -4,9 +4,7 @@ import (
 	"database/sql"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/models"
-	"github.com/halfdb/herro-world/pkg/dto"
 	"github.com/labstack/echo/v4"
-	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
 func UpdateUser(uid int, updates models.M) error {
@@ -33,6 +31,6 @@ func UpdateUser(uid int, updates models.M) error {
 	return nil
 }
 
-func FetchUser(uid int, bind *dto.User) error {
-	return models.Users(models.UserWhere.UID.EQ(uid)).Bind(nil, boil.GetDB(), bind)
+func FetchUser(uid int) (*models.User, error) {
+	return models.Users(models.UserWhere.UID.EQ(uid)).One(common.GetDB())
 }

@@ -18,27 +18,35 @@ const (
 	keyPassword      = "password"
 )
 
-func extractUid(c echo.Context, key string) (int, error) {
-	uidString := c.Param(key)
-	return strconv.Atoi(uidString)
+func convertUser(user *models.User) *dto.User {
+	result := &dto.User{
+		Uid:           user.UID,
+		LoginName:     user.LoginName,
+		ShowLoginName: user.ShowLoginName,
+	}
+	if user.Nickname.Valid {
+		result.Nickname = user.Nickname.String
+	}
+	return result
 }
 
 func GetUserInfo(c echo.Context) error {
-	var user dto.User
-	uid, err := extractUid(c, "uid")
+	uid, err := parsePathInt(c, "uid")
 	if err != nil {
 		c.Logger().Error("failed to extract uid")
 		return err
 	}
-	if err := dao.FetchUser(uid, &user); err != nil {
+
+	user, err := dao.FetchUser(uid)
+	if err != nil {
 		c.Logger().Error("failed to fetch user")
 		return err
 	}
 	// hide login name
-	if auth.GetUid(c) != user.Uid && !user.ShowLoginName {
+	if auth.GetUid(c) != user.UID && !user.ShowLoginName {
 		user.LoginName = ""
 	}
-	return c.JSON(http.StatusOK, user)
+	return c.JSON(http.StatusOK, convertUser(user))
 }
 
 // PatchUserInfo asserts user is authorized, so the uid in token is same with that in query params
@@ -71,10 +79,10 @@ func PatchUserInfo(c echo.Context) error {
 		return err
 	}
 
-	var user dto.User
-	if err := dao.FetchUser(uid, &user); err != nil {
+	user, err := dao.FetchUser(uid)
+	if err != nil {
 		c.Logger().Error("failed to fetch user")
 		return err
 	}
-	return c.JSON(http.StatusOK, user)
+	return c.JSON(http.StatusOK, convertUser(user))
 }

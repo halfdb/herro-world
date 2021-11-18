@@ -3,7 +3,7 @@ package dto
 type User struct {
 	Uid           int    `boil:"uid" json:"uid"`
 	LoginName     string `boil:"login_name" json:"login_name,omitempty"`
-	Nickname      string `boil:"nickname" json:"nickname"`
+	Nickname      string `boil:"nickname" json:"nickname,omitempty"`
 	ShowLoginName bool   `boil:"show_login_name" json:"show_login_name"`
 }
 
