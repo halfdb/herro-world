@@ -18,6 +18,8 @@ const (
 	keyPassword      = "password"
 )
 
+// TODO refactor
+
 func convertUser(user *models.User) *dto.User {
 	result := &dto.User{
 		Uid:           user.UID,

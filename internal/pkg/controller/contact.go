@@ -11,6 +11,7 @@ import (
 	"github.com/volatiletech/null/v8"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const (
@@ -149,7 +150,9 @@ func PatchContact(c echo.Context) error {
 				c.Logger().Error("invalid parameter")
 				return echo.ErrBadRequest
 			}
-			updates[keyBlocked] = blocked
+			now := time.Now()
+			updates[keyBlockedAt] = now
+			updates[keyDeletedAt] = now
 		}
 	}
 
@@ -163,10 +166,13 @@ func PatchContact(c echo.Context) error {
 	}
 
 	// fetch
-	contact, err := dao.FetchContact(uidSelf, uidOther, false)
+	contact, err := dao.FetchContact(uidSelf, uidOther, true)
 	if err != nil {
 		c.Logger().Error("failed to fetch contact")
 		return echo.ErrInternalServerError
+	}
+	if contact.DeletedAt.Valid {
+		return c.String(http.StatusOK, "")
 	}
 	return c.JSON(http.StatusOK, convertContact(contact))
 }
