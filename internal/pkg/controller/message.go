@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	keyMime    = "mime"
-	keyContent = "content"
+	keyMime             = "mime"
+	keyContent          = "content"
+	defaultMessageLimit = 100
 )
 
 func convertMessage(message *models.Message) *dto.Message {
@@ -41,7 +42,7 @@ func GetMessages(c echo.Context) error {
 		return err
 	}
 
-	messages, err := dao.FetchAllMessages(cid)
+	messages, err := dao.FetchAllMessages(cid, defaultMessageLimit)
 	if err != nil {
 		return err
 	}
