@@ -5,7 +5,7 @@
 要するに
 * ユーザーは他のユーザーをコンタクトに登録できます
 * 登録した相手にメッセージを送れます
-* 自分のチャット履歴も見られます
+* 自分のチャット履歴を見ることができます
 
 DBについて、ユーザー、コンタクト、ユーザーの間のチャット、メッセージは保存する対象です。それに、グループやbinaryメッセージの対応を意識しつつDBを設計します。
 
@@ -13,14 +13,14 @@ DBについて、ユーザー、コンタクト、ユーザーの間のチャッ
 
 ユーザー、コンタクト、チャット、メッセージ。この四つのデータはそれぞれの表で保存されてます。
 
-他の三つがわかりやすいと思いますけど、**チャット**について説明します。チャットというのは「会話が発生している場所」と思ってくれればいいかと。ですからメッセージは「相手に送る」ではなく、「自分と相手のチャットに投稿する」のです。そういう設計はグループ会話の実現に役立ちますかと思っています。
+他の三つがわかりやすいと思いますが、**チャット**について説明します。チャットというのは「会話が発生している場所」と思ってください。ですからメッセージは「相手に送る」ではなく、「自分と相手のチャットに投稿する」のです。グループ会話のためにこの設計にしました。
 
 その上、`user_chat`の表を作成し、ユーザーとチャットの関連性を記録します。
 
 
 # 共通
 
-制約に`NOT NULL`あるのが一般的です。NULL可能のフィールドは制約に書きます。
+制約に記載がない場合は「NOT NULL」です。NULL可の場合は「NULL可」と記載します。
 
 複数の表に共通するフィールド
 
@@ -28,12 +28,12 @@ DBについて、ユーザー、コンタクト、ユーザーの間のチャッ
 | --- | --- | --- | --- |
 | `deleted` | BOOL | DEFAULT false | 削除したかどうか |
 | `created_at` | TIMESTAMP | | 作成した時のtimestamp |
-| `updated_at` | TIMESTAMP | NULL可能 | 更新した時のtimestamp |
-| `deleted_at` | TIMESTAMP | NULL可能 | 削除した時のtimestamp |
+| `updated_at` | TIMESTAMP | NULL可 | 更新した時のtimestamp |
+| `deleted_at` | TIMESTAMP | NULL可 | 削除した時のtimestamp |
 
 # `user`表
 
-ユーザー情報の表。`show_login_name`はログインネーム表示設定です。詳しくは要求仕様書に参照ください。
+ユーザー情報の表。`show_login_name`はログインネーム表示設定です。詳しくは要求仕様書を参照ください。
 
 | フィールド | タイプ | 制約等 | 説明 | 
 | --- | --- | --- | --- |
@@ -75,7 +75,7 @@ UNIQUE (`login_name`)
 | --- | --- | --- | --- |
 | `cid` | INT | AUTO_INCREMENT | 主キー|
 | `direct` | BOOL | デフォルト値true | DMかどうか |
-| `name` | VARCHAR(40) | NULL可能 | グループ名、DMは設定不可 |
+| `name` | VARCHAR(40) | NULL可 | グループ名、DMは設定不可 |
 
 ```mysql
 CREATE TABLE `chat` (
@@ -106,17 +106,17 @@ PRIMARY KEY (`cid`)
 >
 > * `(uid2, uid1)`は必ずある
 
-※要求仕様書の「自動的コンタクト登録」に参照。
+※要求仕様書の「自動的コンタクト登録」を参照ください。
 
 | フィールド | タイプ | 制約等 | 説明 | 
 | --- | --- | --- | --- |
 | `uid_self` | INT | | 自分のUID、主キーの一部 |
 | `uid_other` | INT | | 相手のUID、主キーの一部 |
-| `display_name` | VARCHAR(40) | NULL可能 | 相手につけた表示名 |
+| `display_name` | VARCHAR(40) | NULL可 | 相手につけた表示名 |
 | `deleted` | BOOL | デフォルト値false | 自分が相手をコンタクトから削除したかどうか |
 | `blocked` | BOOL | デフォルト値false | 自分が相手をブロックしたかどうか |
 | `cid` | INT | | DMのチャットID | 
-| `blocked_at` | TIMESTAMP | NULL可能 | ブロックした時のtimestamp |
+| `blocked_at` | TIMESTAMP | NULL可 | ブロックした時のtimestamp |
 
 ```mysql
 CREATE TABLE `contact` (
@@ -156,7 +156,7 @@ PRIMARY KEY (`uid_self`, `uid_other`)
 | `cid` | INT |  | チャットのcid、主キーの一部 |
 | `left` | BOOL | デフォルト値false | 退室したかどうか |
 | `joined_at` | TIMESTAMP | | 入室した時のtimestamp |
-| `left_at` | TIMESTAMP | NULL可能 | 退室した時のtimestamp |
+| `left_at` | TIMESTAMP | NULL可 | 退室した時のtimestamp |
 
 
 ```mysql

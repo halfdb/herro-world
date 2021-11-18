@@ -7,9 +7,6 @@
       "items": {
         "$ref": "./chat.json"
       }
-    },
-    "next_page_token": {
-      "type": "string"
     }
   }
 }
