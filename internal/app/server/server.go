@@ -39,7 +39,6 @@ func New(address string, db *sql.DB) error {
 	e.PATCH("/users/:uid/contacts/:uid_other", controller.PatchContact, auth.AuthorizeSelf)
 	e.DELETE("/users/:uid/contacts/:uid_other", controller.DeleteContact, auth.AuthorizeSelf)
 	e.GET("/users/:uid/chats", controller.GetChats, auth.AuthorizeSelf)
-	// TODO API to get chat info
 	e.GET("/chats/:cid/messages", controller.GetMessages, auth.AuthorizeChatMember)
 	e.POST("/chats/:cid/messages", controller.PostMessage, auth.AuthorizeChatMember)
 

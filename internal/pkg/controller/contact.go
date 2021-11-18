@@ -28,7 +28,7 @@ func PostContacts(c echo.Context) error {
 	// parse param
 	uidOther := 0
 	displayName := ""
-	err := echo.PathParamsBinder(c).
+	err := echo.QueryParamsBinder(c).
 		Int(keyUid, &uidOther). // use `uid` to fetch `uid_other` as designed
 		String(keyDisplayName, &displayName).
 		BindError()
@@ -63,6 +63,7 @@ func PostContacts(c echo.Context) error {
 			UIDOther:    uidOther,
 			DisplayName: null.NewString(displayName, displayName != ""),
 		}
+
 		contact, err = dao.CreateContact(tx, contact)
 		if err != nil {
 			c.Logger().Error("failed to create contact")
