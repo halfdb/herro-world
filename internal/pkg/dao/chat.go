@@ -63,7 +63,11 @@ func FetchChat(cid int, withDeleted bool) (*models.Chat, error) {
 
 func FetchAllChats(uid int, withDeleted bool) (models.ChatSlice, error) {
 	mods := append(make([]qm.QueryMod, 0),
-		qm.Select(models.ChatTableColumns.Cid+" as `cid`"),
+		qm.Select(
+			models.ChatTableColumns.Cid+" as "+models.ChatColumns.Cid,
+			models.ChatTableColumns.Direct+" as "+models.ChatColumns.Direct,
+			models.ChatTableColumns.Name+" as "+models.ChatColumns.Name,
+		),
 		qm.InnerJoin(
 			models.TableNames.UserChat+" on "+models.UserChatTableColumns.Cid+" = "+models.ChatTableColumns.Cid,
 		),
