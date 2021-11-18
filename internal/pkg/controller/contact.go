@@ -64,7 +64,7 @@ func PostContacts(c echo.Context) error {
 			DisplayName: null.NewString(displayName, displayName != ""),
 		}
 
-		contact, err = dao.CreateContact(tx, contact)
+		contact, err = dao.CreateContact(tx, contact, true)
 		if err != nil {
 			c.Logger().Error("failed to create contact")
 			c.Logger().Error(err)

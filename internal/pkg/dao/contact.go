@@ -71,14 +71,16 @@ func UpdateContact(uidSelf, uidOther int, updates models.M) error {
 	return nil
 }
 
-func CreateContact(executor boil.Executor, contact *models.Contact) (*models.Contact, error) {
-	// create chat in advance
-	chat, err := CreateChat(executor, nil, true, contact.UIDSelf, contact.UIDOther) // direct chat does not have a name
-	if err != nil {
-		return nil, err
+func CreateContact(executor boil.Executor, contact *models.Contact, createChat bool) (*models.Contact, error) {
+	if createChat {
+		// create chat in advance
+		chat, err := CreateChat(executor, nil, true, contact.UIDSelf, contact.UIDOther) // direct chat does not have a name
+		if err != nil {
+			return nil, err
+		}
+		contact.Cid = chat.Cid
 	}
 	// insert the new contact
-	contact.Cid = chat.Cid
 	if err := contact.Insert(executor, boil.Infer()); err != nil {
 		return nil, err
 	}

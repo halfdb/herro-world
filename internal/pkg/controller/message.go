@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"github.com/halfdb/herro-world/internal/pkg/auth"
 	"github.com/halfdb/herro-world/internal/pkg/common"
@@ -89,7 +90,49 @@ func PostMessage(c echo.Context) error {
 		}
 	}()
 
-	// TODO reverse-adding contact
+	// add reverse contact and check if blocked
+	chat, err := dao.FetchChat(cid, false)
+	if err != nil {
+		return err
+	}
+	if chat.Direct { // only handle direct chats
+		uidsMap, err := dao.GetUids(cid)
+		if err != nil {
+			return err
+		}
+		uids := uidsMap[cid]
+		var uidOther int
+		if uid == uids[0] {
+			uidOther = uids[1]
+		} else {
+			uidOther = uids[0]
+		}
+
+		reverseContact, err := dao.FetchContact(uidOther, uid, true)
+		switch {
+		case err == sql.ErrNoRows: // create new contact
+			reverseContact = &models.Contact{
+				UIDSelf:  uidOther,
+				UIDOther: uid,
+				Cid:      cid,
+			}
+			_, err = dao.CreateContact(tx, reverseContact, false)
+			if err != nil {
+				c.Logger().Error("failed to create reverse contact")
+				return err
+			}
+		case err != nil: // unknown error
+			return err
+		case reverseContact.BlockedAt.Valid: // blocked by receiver, 403
+			return echo.ErrForbidden
+		case reverseContact.DeletedAt.Valid: // not blocked, restore
+			_, err = dao.RestoreContact(tx, reverseContact)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	// create message
 	message, err = dao.CreateMessage(tx, message)
 	if err != nil {

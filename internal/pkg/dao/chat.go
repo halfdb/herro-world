@@ -51,6 +51,16 @@ func LookupDirectChat(uid1, uid2 int, withDeleted bool) (int, error) {
 	return contact.Cid, nil
 }
 
+func FetchChat(cid int, withDeleted bool) (*models.Chat, error) {
+	mods := append(make([]qm.QueryMod, 0),
+		models.ChatWhere.Cid.EQ(cid),
+	)
+	if withDeleted {
+		mods = append(mods, qm.WithDeleted())
+	}
+	return models.Chats(mods...).One(common.GetDB())
+}
+
 func FetchAllChats(uid int, withDeleted bool) (models.ChatSlice, error) {
 	mods := append(make([]qm.QueryMod, 0),
 		qm.Select(models.ChatTableColumns.Cid+" as `cid`"),
