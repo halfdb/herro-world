@@ -64,3 +64,17 @@ func updateUserChat(executor boil.Executor, userChat *models.UserChat) error {
 	}
 	return nil
 }
+
+func GetUids(cids ...int) (map[int][]int, error) {
+	userChats, err := models.UserChats(models.UserChatWhere.Cid.IN(cids)).All(common.GetDB())
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[int][]int)
+	for _, userChat := range userChats {
+		cid := userChat.Cid
+		uid := userChat.UID
+		result[cid] = append(result[cid], uid)
+	}
+	return result, nil
+}

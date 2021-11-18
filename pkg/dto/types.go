@@ -13,7 +13,12 @@ type Contact struct {
 	Cid         int    `boil:"cid" json:"cid"`
 }
 
-type Chats = []int
+type Chat struct {
+	Cid    int    `boil:"cid" json:"cid"`
+	Direct bool   `boil:"direct" json:"direct"`
+	Name   string `boil:"name" json:"name,omitempty"`
+	Uids   []int  `json:"uids"`
+}
 
 type Message struct {
 	Mid     int    `boil:"mid" json:"mid"`
