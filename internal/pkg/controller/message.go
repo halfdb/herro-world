@@ -16,6 +16,7 @@ const (
 	keyMime             = "mime"
 	keyContent          = "content"
 	defaultMessageLimit = 100
+	contentLengthLimit  = 200
 )
 
 func convertMessage(message *models.Message) *dto.Message {
@@ -66,6 +67,8 @@ func PostMessage(c echo.Context) error {
 	contentBytes, err := base64.StdEncoding.DecodeString(content)
 	if err != nil {
 		return echo.ErrBadRequest
+	} else if len(contentBytes) > contentLengthLimit {
+		return echo.ErrStatusRequestEntityTooLarge
 	}
 
 	// build message
