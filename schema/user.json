@@ -5,11 +5,20 @@
     "uid": {
       "type": "integer"
     },
+    "login_name": {
+      "type": "string",
+      "description": "if show_login_name is false, this field is not available"
+    },
     "nickname": {
       "type": "string"
     },
     "show_login_name": {
       "type": "bool"
     }
-  }
+  },
+  "required": [
+    "uid",
+    "nickname",
+    "show_login_name"
+  ]
 }

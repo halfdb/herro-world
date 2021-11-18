@@ -7,9 +7,6 @@
       "items": {
         "$ref": "./message.json"
       }
-    },
-    "next_page_token": {
-      "type": "string"
     }
   }
 }

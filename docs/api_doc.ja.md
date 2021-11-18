@@ -1,12 +1,13 @@
 herro-world API設計書
-  =====
+=====
 
 herro-worldに使うAPIです。
 
 # 共通
 
-* `POST /login`, `POST /users/`以外のAPIにリクエストする時有効なトークンを付けないと`401`が出る
-* 自分の見られないリソース（他人のコンタクトとか）も`401`
+* `POST /login`, `POST /users/`以外のAPIにリクエストする時有効なトークンを付けないと`400`が出る
+* 解析できないリクエストには`400`
+* 自分の見ることのできないリソース（他人のコンタクトとか）は`403`
 
 # アカウント
 
@@ -71,19 +72,19 @@ herro-worldに使うAPIです。
 ### 戻り値
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json
 - `400`: `nickname`, `show_login_name`, `password`中の一つ以上を指定ください
-- `401`: 認証失敗。
+
 
 # コンタクト管理
 
 コンタクトを管理するAPI
 
 ## `GET /users/:uid/contacts`
-自分のコンタクトを見る。削除・ブロックされたコンタクトは見られない。
+自分のコンタクトを見る。削除・ブロックされたコンタクトは見れない。
 
 
 ### 戻り値
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contacts.json
-- `401`: 認証失敗。
+
 ---
 ## `POST /users/:uid/contacts`
 コンタクトにユーザー追加
@@ -98,7 +99,8 @@ herro-worldに使うAPIです。
 
 ### 戻り値
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json
-- `401`: 認証失敗。
+- `409`: コンフリクトのため、コンタクト作成できなかった。
+
 ---
 ## `PATCH /users/:uid/contacts/:uid_other`
 コンタクトなかの一つを更新。削除・ブロックされたコンタクトは更新できない。
@@ -114,7 +116,7 @@ herro-worldに使うAPIです。
 ### 戻り値
 - `200`: 削除・ブロックされてないなら更新したコンタクトを返す。それ以外は空のレスポンスを返す。 https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json
 - `400`: `display_name`, `blocked`中の一つ以上を指定ください
-- `401`: 認証失敗。
+- `404`: 存在しない。
 ---
 ## `DELETE /users/:uid/contacts/:uid_other`
 一つのコンタクトを削除。`deleted=true`をPOSTするのと同様。
@@ -122,7 +124,7 @@ herro-worldに使うAPIです。
 
 ### 戻り値
 - `200`: 成功。
-- `401`: 認証失敗。
+- `404`: 存在しない。
 
 # チャット
 
@@ -133,23 +135,16 @@ herro-worldに使うAPIです。
 
 
 ### 戻り値
-- `200`: 自分のチャットの`cid`のリスト
-- `401`: 認証失敗。
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/chats.json
+
 ---
 ## `GET /chats/:cid/messages`
-チャット内のメッセージを見る。最新情報が先の順で。
+チャット内のメッセージを見る。作成日時が新しいものから順に取得します。
 
-
-### パラメーター
-
-| フィールド | 必須 | コメント |
-|---|---|---|
-|`page_size` | `false` | デフォルト値100。 |
-|`page_token` | `false` | 前のレスポンスの`next_page_token` |
 
 ### 戻り値
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/messages.json
-- `401`: 認証失敗。
+
 ---
 ## `POST /chats/:cid/messages`
 チャットにメッセージを投稿
@@ -164,4 +159,6 @@ herro-worldに使うAPIです。
 
 ### 戻り値
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/message.json
-- `401`: 認証失敗。
+- `403`: 自分をブロックした相手にDM送るのは禁止
+- `413`: contentの長さは上限を超えた
+

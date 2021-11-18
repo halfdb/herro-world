@@ -10,6 +10,12 @@
     },
     "name": {
       "type": "string"
+    },
+    "uids": {
+      "type": "list",
+      "item": {
+        "type": "integer"
+      }
     }
   }
 }

@@ -1,16 +1,19 @@
 package server
 
 import (
-	"context"
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/halfdb/herro-world/internal/pkg/auth"
 	"github.com/halfdb/herro-world/internal/pkg/controller"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-func New(address string, ctx context.Context, db *sql.DB) error {
+func New(address string, db *sql.DB) error {
+	boil.SetDB(db)
+	boil.DebugMode = true
+
 	// Echo instance
 	e := echo.New()
 	e.Debug = true
@@ -27,8 +30,17 @@ func New(address string, ctx context.Context, db *sql.DB) error {
 
 	// Routes
 	e.GET("/", controller.Herro)
-	e.POST("/users", auth.Register(ctx, db))
-	e.POST("/login", auth.Validator(ctx, db))
+	e.POST("/users", auth.Register(db))
+	e.POST("/login", auth.Validator(db))
+	e.GET("/users/:uid", controller.GetUserInfo)
+	e.PATCH("/users/:uid", controller.PatchUserInfo, auth.AuthorizeSelf)
+	e.POST("/users/:uid/contacts", controller.PostContacts, auth.AuthorizeSelf)
+	e.GET("/users/:uid/contacts", controller.GetContacts, auth.AuthorizeSelf)
+	e.PATCH("/users/:uid/contacts/:uid_other", controller.PatchContact, auth.AuthorizeSelf)
+	e.DELETE("/users/:uid/contacts/:uid_other", controller.DeleteContact, auth.AuthorizeSelf)
+	e.GET("/users/:uid/chats", controller.GetChats, auth.AuthorizeSelf)
+	e.GET("/chats/:cid/messages", controller.GetMessages, auth.AuthorizeChatMember)
+	e.POST("/chats/:cid/messages", controller.PostMessage, auth.AuthorizeChatMember)
 
 	// Start server
 	return e.Start(address)
