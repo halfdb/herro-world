@@ -47,7 +47,7 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 
 func GetChats(c echo.Context) error {
 	uid := auth.GetUid(c)
-	chats, err := dao.FetchAllChats(uid, false)
+	chats, err := dao.FetchVisibleChats(uid)
 	if err != nil {
 		return err
 	}

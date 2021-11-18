@@ -110,7 +110,7 @@ func convertContact(original *models.Contact) *dto.Contact {
 
 func GetContacts(c echo.Context) error {
 	uid := auth.GetUid(c)
-	boilContacts, err := dao.FetchAllContacts(uid)
+	boilContacts, err := dao.FetchAllContacts(uid, false, false)
 	if err != nil {
 		return err
 	}

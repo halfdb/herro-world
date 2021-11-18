@@ -33,12 +33,18 @@ func ContactExists(uidSelf, uidOther int, withDeleted bool) (bool, error) {
 	}
 }
 
-func FetchAllContacts(uid int) (models.ContactSlice, error) {
-	return models.Contacts(
+func FetchAllContacts(uid int, withDeleted bool, withBlocked bool) (models.ContactSlice, error) {
+	mods := append(make([]qm.QueryMod, 0),
 		qm.Select(models.ContactColumns.UIDOther, models.ContactColumns.DisplayName, models.ContactColumns.Cid),
 		models.ContactWhere.UIDSelf.EQ(uid),
-		models.ContactWhere.BlockedAt.IsNull(),
-	).All(common.GetDB())
+	)
+	if withDeleted {
+		mods = append(mods, qm.WithDeleted())
+	}
+	if !withBlocked {
+		mods = append(mods, models.ContactWhere.BlockedAt.IsNull())
+	}
+	return models.Contacts(mods...).All(common.GetDB())
 }
 
 func UpdateContact(uidSelf, uidOther int, updates models.M) error {
