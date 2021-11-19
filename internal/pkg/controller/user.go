@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/halfdb/herro-world/internal/pkg/auth"
+	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
 	"github.com/halfdb/herro-world/pkg/dto"
@@ -12,7 +12,6 @@ import (
 
 const (
 	keyUid           = "uid"
-	keyLoginName     = "login_name"
 	keyNickname      = "nickname"
 	keyShowLoginName = "show_login_name"
 	keyPassword      = "password"
@@ -45,7 +44,7 @@ func GetUserInfo(c echo.Context) error {
 		return err
 	}
 	// hide login name
-	if auth.GetUid(c) != user.UID && !user.ShowLoginName {
+	if authorization.GetUid(c) != user.UID && !user.ShowLoginName {
 		user.LoginName = ""
 	}
 	return c.JSON(http.StatusOK, convertUser(user))
@@ -53,7 +52,7 @@ func GetUserInfo(c echo.Context) error {
 
 // PatchUserInfo asserts user is authorized, so the uid in token is same with that in query params
 func PatchUserInfo(c echo.Context) error {
-	uid := auth.GetUid(c)
+	uid := authorization.GetUid(c)
 
 	values := c.QueryParams()
 	updates := make(models.M)

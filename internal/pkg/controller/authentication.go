@@ -1,8 +1,9 @@
-package auth
+package controller
 
 import (
 	"database/sql"
 	"github.com/golang-jwt/jwt"
+	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/models"
 	"github.com/labstack/echo/v4"
 	"github.com/volatiletech/null/v8"
@@ -19,13 +20,8 @@ func GetJWTSecret() string {
 	return jwtSecret
 }
 
-type Claims struct {
-	Uid int
-	jwt.StandardClaims
-}
-
 func signUser(user *models.User) (string, error) {
-	claims := Claims{
+	claims := common.Claims{
 		Uid: user.UID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),

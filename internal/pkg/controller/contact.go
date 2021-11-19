@@ -2,7 +2,7 @@ package controller
 
 import (
 	"database/sql"
-	"github.com/halfdb/herro-world/internal/pkg/auth"
+	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
@@ -15,17 +15,15 @@ import (
 )
 
 const (
-	keyUidSelf     = "uid_self"
 	keyUidOther    = "uid_other"
 	keyDisplayName = "display_name"
-	keyCid         = "cid"
 	keyDeletedAt   = "deleted_at"
 	keyBlocked     = "blocked"
 	keyBlockedAt   = "blocked_at"
 )
 
 func PostContacts(c echo.Context) error {
-	uid := auth.GetUid(c)
+	uid := authorization.GetUid(c)
 	// parse param
 	uidOther := 0
 	displayName := ""
@@ -110,7 +108,7 @@ func convertContact(original *models.Contact) *dto.Contact {
 }
 
 func GetContacts(c echo.Context) error {
-	uid := auth.GetUid(c)
+	uid := authorization.GetUid(c)
 	boilContacts, err := dao.FetchAllContacts(uid, false, false)
 	if err != nil {
 		return err
@@ -125,7 +123,7 @@ func GetContacts(c echo.Context) error {
 
 func PatchContact(c echo.Context) error {
 	// parse uids
-	uidSelf := auth.GetUid(c)
+	uidSelf := authorization.GetUid(c)
 	uidOther := 0
 	err := echo.PathParamsBinder(c).Int(keyUidOther, &uidOther).BindError()
 	if err != nil || uidOther == 0 {
@@ -179,7 +177,7 @@ func PatchContact(c echo.Context) error {
 
 func DeleteContact(c echo.Context) error {
 	// parse uids
-	uidSelf := auth.GetUid(c)
+	uidSelf := authorization.GetUid(c)
 	uidOther := 0
 	err := echo.PathParamsBinder(c).Int(keyUidOther, &uidOther).BindError()
 	if err != nil || uidOther == 0 {
