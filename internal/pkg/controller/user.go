@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
@@ -76,8 +77,10 @@ func PatchUserInfo(c echo.Context) error {
 	}
 
 	if err := dao.UpdateUser(uid, updates); err != nil {
-		c.Logger().Error("failed to update user")
-		return err
+		if err != sql.ErrNoRows {
+			c.Logger().Error("failed to update user")
+			return err
+		}
 	}
 
 	user, err := dao.FetchUser(uid)
