@@ -13,7 +13,9 @@
       "list": [
         {
           "description": "ログイン。成功した場合はJWTトークンを返します。その後のリクエストのheaderに`Authorization: Bearer <token_string>`を追加する必要があります。",
-          "methods": ["POST"],
+          "methods": [
+            "POST"
+          ],
           "params": [
             "login_name",
             "password"
@@ -31,7 +33,9 @@
         {
           "description": "登録",
           "path": "/users",
-          "methods": ["POST"],
+          "methods": [
+            "POST"
+          ],
           "params": [
             "login_name",
             "nickname",
@@ -50,7 +54,9 @@
         },
         {
           "description": "ユーザー情報",
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "path": "/users/:uid",
           "returns": [
             {
@@ -61,7 +67,9 @@
         },
         {
           "description": "自分の情報を更新",
-          "methods": ["PATCH"],
+          "methods": [
+            "PATCH"
+          ],
           "path": "/users/:uid",
           "params": [
             {
@@ -97,7 +105,9 @@
         {
           "description": "自分のコンタクトを見る。削除・ブロックされたコンタクトは見れない。",
           "path": "/users/:uid/contacts",
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "returns": [
             {
               "status_code": 200,
@@ -108,7 +118,9 @@
         {
           "description": "コンタクトにユーザー追加",
           "path": "/users/:uid/contacts",
-          "methods": ["POST"],
+          "methods": [
+            "POST"
+          ],
           "params": [
             "uid",
             {
@@ -130,35 +142,36 @@
         {
           "description": "コンタクトなかの一つを更新。削除・ブロックされたコンタクトは更新できない。",
           "path": "/users/:uid/contacts/:uid_other",
-          "methods": ["PATCH"],
+          "methods": [
+            "PATCH"
+          ],
           "params": [
             {
               "key": "display_name",
-              "mandatory": false
-            },
-            {
-              "key": "blocked",
-              "mandatory": false,
-              "comment": "trueしか受け入れない"
+              "mandatory": true
             }
           ],
           "returns": [
             {
               "status_code": 200,
-              "description": "削除・ブロックされてないなら更新したコンタクトを返す。それ以外は空のレスポンスを返す。",
               "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json"
-            },
-            {
-              "status_code": 400,
-              "description": "`display_name`, `blocked`中の一つ以上を指定ください"
             },
             404
           ]
         },
         {
-          "description": "一つのコンタクトを削除。`deleted=true`をPOSTするのと同様。",
+          "description": "一つのコンタクトを削除。",
           "path": "/users/:uid/contacts/:uid_other",
-          "methods": ["DELETE"],
+          "methods": [
+            "DELETE"
+          ],
+          "params": [
+            {
+              "key": "blocked",
+              "comment": "ブロックもするかどうか",
+              "mandatory": false
+            }
+          ],
           "returns": [
             200,
             404
@@ -173,7 +186,9 @@
         {
           "description": "チャットリストを見る",
           "path": "/users/:uid/chats",
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "returns": [
             {
               "status_code": 200,
@@ -184,7 +199,9 @@
         {
           "description": "チャット内のメッセージを見る。作成日時が新しいものから順に取得します。",
           "path": "/chats/:cid/messages",
-          "methods": ["GET"],
+          "methods": [
+            "GET"
+          ],
           "returns": [
             {
               "status_code": 200,
@@ -195,7 +212,9 @@
         {
           "description": "チャットにメッセージを投稿",
           "path": "/chats/:cid/messages",
-          "methods": ["POST"],
+          "methods": [
+            "POST"
+          ],
           "params": [
             {
               "key": "mime",

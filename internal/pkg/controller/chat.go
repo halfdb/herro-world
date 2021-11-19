@@ -17,7 +17,7 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 	}
 	uidsCh := make(chan map[int][]int, 1)
 	go func() {
-		uids, err := dao.GetUids(cids...)
+		uids, err := dao.GetUids(false, cids...)
 		if err != nil {
 			close(uidsCh)
 			return

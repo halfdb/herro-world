@@ -110,17 +110,21 @@ herro-worldに使うAPIです。
 
 | フィールド | 必須 | コメント |
 |---|---|---|
-|`display_name` | `false` |  |
-|`blocked` | `false` | trueしか受け入れない |
+|`display_name` | `true` |  |
 
 ### 戻り値
-- `200`: 削除・ブロックされてないなら更新したコンタクトを返す。それ以外は空のレスポンスを返す。 https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json
-- `400`: `display_name`, `blocked`中の一つ以上を指定ください
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json
 - `404`: 存在しない。
 ---
 ## `DELETE /users/:uid/contacts/:uid_other`
-一つのコンタクトを削除。`deleted=true`をPOSTするのと同様。
+一つのコンタクトを削除。
 
+
+### パラメーター
+
+| フィールド | 必須 | コメント |
+|---|---|---|
+|`blocked` | `false` | ブロックもするかどうか |
 
 ### 戻り値
 - `200`: 成功。

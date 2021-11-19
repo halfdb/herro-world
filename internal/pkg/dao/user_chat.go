@@ -54,7 +54,7 @@ func RestoreUserChat(executor boil.Executor, uid, cid int) error {
 }
 
 func updateUserChat(executor boil.Executor, userChat *models.UserChat) error {
-	rowsAff, err := userChat.Update(executor, boil.Whitelist(models.UserChatColumns.DeletedAt))
+	rowsAff, err := userChat.Update(executor, boil.Infer())
 	if rowsAff == 0 {
 		return sql.ErrNoRows
 	} else if err != nil {
@@ -65,8 +65,14 @@ func updateUserChat(executor boil.Executor, userChat *models.UserChat) error {
 	return nil
 }
 
-func GetUids(cids ...int) (map[int][]int, error) {
-	userChats, err := models.UserChats(models.UserChatWhere.Cid.IN(cids)).All(common.GetDB())
+func GetUids(withDeleted bool, cids ...int) (map[int][]int, error) {
+	mods := append(make([]qm.QueryMod, 0),
+		models.UserChatWhere.Cid.IN(cids),
+	)
+	if withDeleted {
+		mods = append(mods, qm.WithDeleted())
+	}
+	userChats, err := models.UserChats(mods...).All(common.GetDB())
 	if err != nil {
 		return nil, err
 	}
