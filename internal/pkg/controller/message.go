@@ -38,10 +38,7 @@ func convertMessages(messages models.MessageSlice) []*dto.Message {
 }
 
 func GetMessages(c echo.Context) error {
-	cid, err := parsePathInt(c, keyCid)
-	if err != nil {
-		return err
-	}
+	cid := auth.GetCid(c)
 
 	messages, err := dao.FetchAllMessages(cid, defaultMessageLimit)
 	if err != nil {
@@ -54,13 +51,10 @@ func GetMessages(c echo.Context) error {
 func PostMessage(c echo.Context) error {
 	// params
 	uid := auth.GetUid(c)
-	cid, err := parsePathInt(c, keyCid)
-	if err != nil {
-		return err
-	}
+	cid := auth.GetCid(c)
 	mime := "text/plain"
 	content := ""
-	err = echo.QueryParamsBinder(c).String(keyMime, &mime).String(keyContent, &content).BindError()
+	err := echo.QueryParamsBinder(c).String(keyMime, &mime).String(keyContent, &content).BindError()
 	if err != nil {
 		return echo.ErrBadRequest
 	}
@@ -95,10 +89,7 @@ func PostMessage(c echo.Context) error {
 	}()
 
 	// add reverse contact and check if blocked
-	chat, err := dao.FetchChat(cid, false)
-	if err != nil {
-		return err
-	}
+	chat := auth.GetChat(c)
 	if chat.Direct { // only handle direct chats
 		uidsMap, err := dao.GetUids(cid)
 		if err != nil {
