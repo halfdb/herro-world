@@ -40,7 +40,9 @@ func GetUserInfo(c echo.Context) error {
 	}
 
 	user, err := dao.FetchUser(uid)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return echo.ErrNotFound
+	} else if err != nil {
 		c.Logger().Error("failed to fetch user")
 		return err
 	}
