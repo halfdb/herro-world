@@ -23,3 +23,9 @@ sqlboiler.toml
 
 # IDE
 .idea/
+
+# volumes
+deployments/volumes/
+
+# environment
+.env

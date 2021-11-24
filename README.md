@@ -1,15 +1,8 @@
-# Preparation
+# Steps
 
-## Set up database access
+1. (Optional) Set up `deployments/docker/.env`. See `deployments/docker/.env.example` for example.
 
-1. Set up the `DB_STRING` environment variable. It will be used in the program and in goose.
+2. Start `docker-compose`
 ```shell
-export DB_STRING=user:pass@tcp\(localhost:3306\)/db?parseTime=true
+make compose-up
 ```
-
-2. Set up the `sqlboiler.toml`. See `configs/sqlboiler.example` for example.
-
-## Install tools
-
-* sqlboiler v4.6.0
-* goose v3.3.1
