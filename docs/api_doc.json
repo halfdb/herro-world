@@ -233,17 +233,73 @@
       ]
     },
     {
-      "title": "Misc",
-      "description": "Other APIs.",
+      "title": "Group",
+      "description": "Group related APIs",
       "list": [
         {
-          "description": "List available MIMEs",
-          "path": "/mimes",
-          "methods": ["GET"],
-          "returns": [
-            200
+          "description": "Create group",
+          "path": "/chats",
+          "methods": [
+            "POST"
           ],
-          "return_example": "[{100: \"text/plain\"}]"
+          "params": [
+            {
+              "key": "uids",
+              "mandatory": true,
+              "comment": "UIDs of the members. At least 3. In the form of `uids=1&uids=2&uids=3`."
+            },
+            {
+              "key": "name",
+              "mandatory": false
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/chat.json"
+            },
+            {
+              "status_code": 403,
+              "description": "Adding users who are not in contacts is not allowed."
+            }
+          ]
+        },
+        {
+          "description": "Check group members",
+          "path": "/chats/:cid/members",
+          "methods": [
+            "GET"
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json"
+            }
+          ]
+        },
+        {
+          "description": "Add members",
+          "path": "/chats/:cid/members",
+          "methods": [
+            "POST"
+          ],
+          "params": [
+            {
+              "key": "uids",
+              "mandatory": true,
+              "comment": "UIDs of the added members. At least 1. In the form of `uids=1&uids=2&uids=3`."
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json"
+            },
+            {
+              "status_code": 403,
+              "description": "Adding users who are not in contacts is not allowed."
+            }
+          ]
         }
       ]
     }

@@ -166,3 +166,46 @@ herro-worldに使うAPIです。
 - `403`: 自分をブロックした相手にDM送るのは禁止
 - `413`: contentの長さは上限を超えた
 
+
+# グループ
+
+グループ関連のAPI
+
+## `POST /chats`
+グループを作る
+
+
+### パラメーター
+
+| フィールド | 必須 | コメント |
+|---|---|---|
+|`uids` | `true` | 参加者のUID。三人以上。形は`uids=1&uids=2&uids=3`。 |
+|`name` | `false` |  |
+
+### 戻り値
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/chat.json
+- `403`: 自分のコンタクトにないユーザーを追加するのは禁止されます
+
+---
+## `GET /chats/:cid/members`
+グループメンバーを確認
+
+
+### 戻り値
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
+
+---
+## `POST /chats/:cid/members`
+グループメンバーを追加
+
+
+### パラメーター
+
+| フィールド | 必須 | コメント |
+|---|---|---|
+|`uids` | `true` | 追加する参加者のUID。一人以上。形は`uids=1&uids=2&uids=3`。 |
+
+### 戻り値
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
+- `403`: 自分のコンタクトにないユーザーを追加するのは禁止されます
+

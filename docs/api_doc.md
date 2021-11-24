@@ -25,7 +25,7 @@ Login with login_name and password
 
 ### Return
 - `200`: Successful login. Returns token.
-- `403`: Auth failed. Login and try again.
+- `403`: Forbidden.
 
 ### Return example
 ```
@@ -45,7 +45,7 @@ Register
 |`password` | `true` | |
 
 ### Return
-- `200`: Success.
+- `200`: OK.
 - `409`: Unable to create user due to conflict.
 
 ---
@@ -72,7 +72,7 @@ Update user info of oneself.
 ### Return
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json
 - `400`: At least one of `nickname`, `show_login_name`, `password` must be specified.
-- `403`: Auth failed. Login and try again.
+- `403`: Forbidden.
 
 
 # Contact management
@@ -85,7 +85,7 @@ View one's contacts. Deleted or blocked contacts are invisible.
 
 ### Return
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contacts.json
-- `403`: Auth failed. Login and try again.
+- `403`: Forbidden.
 
 ---
 ## `POST /users/:uid/contacts`
@@ -101,7 +101,7 @@ Add a user into contact.
 
 ### Return
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json
-- `403`: Auth failed. Login and try again.
+- `403`: Forbidden.
 
 ---
 ## `POST /users/:uid/contacts/:uid_other`
@@ -119,7 +119,7 @@ Update one of one's contacts. Deleted or blocked contacts cannot be updated.
 ### Return
 - `200`: The contact if not deleted or blocked. Empty else. https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json
 - `400`: At least one of `display_name`, `deleted`, `blocked` must be specified.
-- `403`: Auth failed. Login and try again.
+- `403`: Forbidden.
 
 ---
 ## `DELETE /users/:uid/contacts/:uid_other`
@@ -127,8 +127,8 @@ Delete a contact. A shortcut to POST `deleted=true`
 
 
 ### Return
-- `200`: Success.
-- `403`: Auth failed. Login and try again.
+- `200`: OK.
+- `403`: Forbidden.
 
 
 # Chatting
@@ -141,7 +141,7 @@ View chat list
 
 ### Return
 - `200`: Returns a list of `cid`s of the chats that the user is in.
-- `403`: Auth failed. Login and try again.
+- `403`: Forbidden.
 
 ---
 ## `GET /chats/:cid/messages`
@@ -157,7 +157,7 @@ View messages in a chat. Newest messages first by default.
 
 ### Return
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/messages.json
-- `403`: Auth failed. Login and try again.
+- `403`: Forbidden.
 
 ---
 ## `POST /chats/:cid/messages`
@@ -173,21 +173,48 @@ Post new message into a chat.
 
 ### Return
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/message.json
-- `403`: Auth failed. Login and try again.
+- `403`: Forbidden.
 
 
-# Misc
+# Group
 
-Other APIs.
+Group related APIs
 
-## `GET /mimes`
-List available MIMEs
+## `POST /chats`
+Create group
+
+
+### Params
+
+| Field name | Mandatory | Comment |
+|---|---|---|
+|`uids` | `true` | UIDs of the members. At least 3. In the form of `uids=1&uids=2&uids=3`. |
+|`name` | `false` |  |
+
+### Return
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/chat.json
+- `403`: Adding users who are not in contacts is not allowed.
+
+---
+## `GET /chats/:cid/members`
+Check group members
 
 
 ### Return
-- `200`: Success.
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
 
-### Return example
-```
-[{100: "text/plain"}]
-```
+---
+## `POST /chats/:cid/members`
+Add members
+
+
+### Params
+
+| Field name | Mandatory | Comment |
+|---|---|---|
+|`uids` | `true` | UIDs of the added members. At least 1. In the form of `uids=1&uids=2&uids=3`. |
+
+### Return
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
+- `403`: Adding users who are not in contacts is not allowed.
+

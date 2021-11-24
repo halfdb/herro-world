@@ -242,6 +242,77 @@
           ]
         }
       ]
+    },
+    {
+      "title": "グループ",
+      "description": "グループ関連のAPI",
+      "list": [
+        {
+          "description": "グループを作る",
+          "path": "/chats",
+          "methods": [
+            "POST"
+          ],
+          "params": [
+            {
+              "key": "uids",
+              "mandatory": true,
+              "comment": "参加者のUID。三人以上。形は`uids=1&uids=2&uids=3`。"
+            },
+            {
+              "key": "name",
+              "mandatory": false
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/chat.json"
+            },
+            {
+              "status_code": 403,
+              "description": "自分のコンタクトにないユーザーを追加するのは禁止されます"
+            }
+          ]
+        },
+        {
+          "description": "グループメンバーを確認",
+          "path": "/chats/:cid/members",
+          "methods": [
+            "GET"
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json"
+            }
+          ]
+        },
+        {
+          "description": "グループメンバーを追加",
+          "path": "/chats/:cid/members",
+          "methods": [
+            "POST"
+          ],
+          "params": [
+            {
+              "key": "uids",
+              "mandatory": true,
+              "comment": "追加する参加者のUID。一人以上。形は`uids=1&uids=2&uids=3`。"
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json"
+            },
+            {
+              "status_code": 403,
+              "description": "自分のコンタクトにないユーザーを追加するのは禁止されます"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
