@@ -311,6 +311,17 @@
               "description": "自分のコンタクトにないユーザーを追加するのは禁止されます"
             }
           ]
+        },
+        {
+          "description": "グループから退会",
+          "path": "/chats/:cid/members/:uid",
+          "methods": [
+            "DELETE"
+          ],
+          "returns": [
+            200,
+            403
+          ]
         }
       ]
     }

@@ -209,3 +209,12 @@ herro-worldに使うAPIです。
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
 - `403`: 自分のコンタクトにないユーザーを追加するのは禁止されます
 
+---
+## `DELETE /chats/:cid/members/:uid`
+グループから退会
+
+
+### 戻り値
+- `200`: 成功。
+- `403`: 禁止。
+

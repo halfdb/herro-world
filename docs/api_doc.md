@@ -218,3 +218,12 @@ Add members
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
 - `403`: Adding users who are not in contacts is not allowed.
 
+---
+## `DELETE /chats/:cid/members/:uid`
+Quit group
+
+
+### Return
+- `200`: OK.
+- `403`: Forbidden.
+

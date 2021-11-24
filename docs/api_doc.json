@@ -300,6 +300,17 @@
               "description": "Adding users who are not in contacts is not allowed."
             }
           ]
+        },
+        {
+          "description": "Quit group",
+          "path": "/chats/:cid/members/:uid",
+          "methods": [
+            "DELETE"
+          ],
+          "returns": [
+            200,
+            403
+          ]
         }
       ]
     }
