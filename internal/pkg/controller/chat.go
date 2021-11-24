@@ -2,7 +2,7 @@ package controller
 
 import (
 	"errors"
-	"github.com/halfdb/herro-world/internal/pkg/auth"
+	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
 	"github.com/halfdb/herro-world/pkg/dto"
@@ -17,7 +17,7 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 	}
 	uidsCh := make(chan map[int][]int, 1)
 	go func() {
-		uids, err := dao.GetUids(cids...)
+		uids, err := dao.GetUids(false, cids...)
 		if err != nil {
 			close(uidsCh)
 			return
@@ -46,7 +46,7 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 }
 
 func GetChats(c echo.Context) error {
-	uid := auth.GetUid(c)
+	uid := authorization.GetUid(c)
 	chats, err := dao.FetchVisibleChats(uid)
 	if err != nil {
 		return err

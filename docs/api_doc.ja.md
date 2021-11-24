@@ -110,17 +110,21 @@ herro-worldに使うAPIです。
 
 | フィールド | 必須 | コメント |
 |---|---|---|
-|`display_name` | `false` |  |
-|`blocked` | `false` | trueしか受け入れない |
+|`display_name` | `true` |  |
 
 ### 戻り値
-- `200`: 削除・ブロックされてないなら更新したコンタクトを返す。それ以外は空のレスポンスを返す。 https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json
-- `400`: `display_name`, `blocked`中の一つ以上を指定ください
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/contact.json
 - `404`: 存在しない。
 ---
 ## `DELETE /users/:uid/contacts/:uid_other`
-一つのコンタクトを削除。`deleted=true`をPOSTするのと同様。
+一つのコンタクトを削除。
 
+
+### パラメーター
+
+| フィールド | 必須 | コメント |
+|---|---|---|
+|`blocked` | `false` | ブロックもするかどうか |
 
 ### 戻り値
 - `200`: 成功。
@@ -161,4 +165,56 @@ herro-worldに使うAPIです。
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/message.json
 - `403`: 自分をブロックした相手にDM送るのは禁止
 - `413`: contentの長さは上限を超えた
+
+
+# グループ
+
+グループ関連のAPI
+
+## `POST /chats`
+グループを作る
+
+
+### パラメーター
+
+| フィールド | 必須 | コメント |
+|---|---|---|
+|`uids` | `true` | 参加者のUID。三人以上。形は`uids=1&uids=2&uids=3`。 |
+|`name` | `false` |  |
+
+### 戻り値
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/chat.json
+- `403`: 自分のコンタクトにないユーザーを追加するのは禁止されます
+
+---
+## `GET /chats/:cid/members`
+グループメンバーを確認
+
+
+### 戻り値
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
+
+---
+## `POST /chats/:cid/members`
+グループメンバーを追加
+
+
+### パラメーター
+
+| フィールド | 必須 | コメント |
+|---|---|---|
+|`uids` | `true` | 追加する参加者のUID。一人以上。形は`uids=1&uids=2&uids=3`。 |
+
+### 戻り値
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
+- `403`: 自分のコンタクトにないユーザーを追加するのは禁止されます
+
+---
+## `DELETE /chats/:cid/members/:uid`
+グループから退会
+
+
+### 戻り値
+- `200`: 成功。
+- `403`: 禁止。
 

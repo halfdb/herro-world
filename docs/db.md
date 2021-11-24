@@ -1,11 +1,13 @@
 # herro-worldとは
 
-簡単なチャットサービスです。課題自身の詳細はこちら。https://moneyforward.kibe.la/notes/194818 要求仕様書はこちら。 https://moneyforward.kibe.la/notes/194950
+簡単なチャットサービスです。課題自身の詳細はこちら。https://moneyforward.kibe.la/notes/194818
+
+要求仕様書はこちら。https://moneyforward.kibe.la/notes/194950
 
 要するに
 * ユーザーは他のユーザーをコンタクトに登録できます
 * 登録した相手にメッセージを送れます
-* 自分のチャット履歴を見ることができます
+* 自分のチャット履歴を見ることもできます
 
 DBについて、ユーザー、コンタクト、ユーザーの間のチャット、メッセージは保存する対象です。それに、グループやbinaryメッセージの対応を意識しつつDBを設計します。
 
@@ -26,9 +28,8 @@ DBについて、ユーザー、コンタクト、ユーザーの間のチャッ
 
 | フィールド | タイプ | 制約等 | 説明 | 
 | --- | --- | --- | --- |
-| `deleted` | BOOL | DEFAULT false | 削除したかどうか |
 | `created_at` | TIMESTAMP | | 作成した時のtimestamp |
-| `updated_at` | TIMESTAMP | NULL可 | 更新した時のtimestamp |
+| `updated_at` | TIMESTAMP | | 更新した時のtimestamp |
 | `deleted_at` | TIMESTAMP | NULL可 | 削除した時のtimestamp |
 
 # `user`表
@@ -57,9 +58,8 @@ CREATE TABLE `user` (
 -- ログインネーム表示設定
 `show_login_name` BOOL NOT NULL DEFAULT false,
 
-`deleted` BOOL NOT NULL DEFAULT false,
 `created_at` TIMESTAMP NOT NULL,
-`updated_at` TIMESTAMP,
+`updated_at` TIMESTAMP NOT NULL,
 `deleted_at` TIMESTAMP,
 PRIMARY KEY (`uid`),
 -- ログインネームにユニーク制約
@@ -86,9 +86,8 @@ CREATE TABLE `chat` (
 -- グループ名、DMは設定不可
 `name` VARCHAR(40),
 
-`deleted` BOOL NOT NULL DEFAULT false,
 `created_at` TIMESTAMP NOT NULL,
-`updated_at` TIMESTAMP,
+`updated_at` TIMESTAMP NOT NULL,
 `deleted_at` TIMESTAMP,
 PRIMARY KEY (`cid`)
 );
@@ -113,8 +112,6 @@ PRIMARY KEY (`cid`)
 | `uid_self` | INT | | 自分のUID、主キーの一部 |
 | `uid_other` | INT | | 相手のUID、主キーの一部 |
 | `display_name` | VARCHAR(40) | NULL可 | 相手につけた表示名 |
-| `deleted` | BOOL | デフォルト値false | 自分が相手をコンタクトから削除したかどうか |
-| `blocked` | BOOL | デフォルト値false | 自分が相手をブロックしたかどうか |
 | `cid` | INT | | DMのチャットID | 
 | `blocked_at` | TIMESTAMP | NULL可 | ブロックした時のtimestamp |
 
@@ -126,15 +123,11 @@ CREATE TABLE `contact` (
 `uid_other` INT NOT NULL,
 -- 相手につけた表示名
 `display_name` VARCHAR(40),
--- 自分が相手をコンタクトから削除したかどうか
-`deleted` BOOL NOT NULL DEFAULT false,
--- 自分が相手をブロックしたかどうか
-`blocked` BOOL NOT NULL DEFAULT false,
 -- DMのチャットID
 `cid` INT NOT NULL,
 
 `created_at` TIMESTAMP NOT NULL,
-`updated_at` TIMESTAMP,
+`updated_at` TIMESTAMP NOT NULL,
 `deleted_at` TIMESTAMP,
 `blocked_at` TIMESTAMP,
 -- 両方のUIDの組み合わせが主キーになる
@@ -148,15 +141,14 @@ PRIMARY KEY (`uid_self`, `uid_other`)
 
 `left`ではなければ、記録されたユーザー`uid`は`cid`というチャットに入ってる。そのチャットからの受信は可能。
 
-`left == true`の場合、`uid`はもう（グループの場合）退室したまたは（DMの場合）相手を削除・ブロックした。
+`deleted_at != NULL`の場合、`uid`はもう（グループの場合）退室したまたは（DMの場合）相手を削除・ブロックした。
 
 | フィールド | タイプ | 制約等 | 説明 | 
 | --- | --- | --- | --- |
 | `uid` | INT | | ユーザーのuid、主キーの一部 |
 | `cid` | INT |  | チャットのcid、主キーの一部 |
-| `left` | BOOL | デフォルト値false | 退室したかどうか |
-| `joined_at` | TIMESTAMP | | 入室した時のtimestamp |
-| `left_at` | TIMESTAMP | NULL可 | 退室した時のtimestamp |
+| `created_at` | TIMESTAMP | | 入室した時のtimestamp |
+| `deleted_at` | TIMESTAMP | NULL可能 | 退室した時のtimestamp |
 
 
 ```mysql
@@ -165,11 +157,9 @@ CREATE TABLE `user_chat` (
 `uid` INT NOT NULL,
 -- チャットのcid
 `cid` INT NOT NULL,
--- 退室したかどうか
-`left` BOOL NOT NULL DEFAULT false,
 
-`joined_at` TIMESTAMP NOT NULL,
-`left_at` TIMESTAMP,
+`created_at` TIMESTAMP NOT NULL,
+`deleted_at` TIMESTAMP,
 -- 組み合わせが主キー
 PRIMARY KEY (`uid`, `cid`)
 );

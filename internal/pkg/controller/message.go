@@ -3,7 +3,7 @@ package controller
 import (
 	"database/sql"
 	"encoding/base64"
-	"github.com/halfdb/herro-world/internal/pkg/auth"
+	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
@@ -38,10 +38,7 @@ func convertMessages(messages models.MessageSlice) []*dto.Message {
 }
 
 func GetMessages(c echo.Context) error {
-	cid, err := parsePathInt(c, keyCid)
-	if err != nil {
-		return err
-	}
+	cid := authorization.GetCid(c)
 
 	messages, err := dao.FetchAllMessages(cid, defaultMessageLimit)
 	if err != nil {
@@ -53,14 +50,11 @@ func GetMessages(c echo.Context) error {
 
 func PostMessage(c echo.Context) error {
 	// params
-	uid := auth.GetUid(c)
-	cid, err := parsePathInt(c, keyCid)
-	if err != nil {
-		return err
-	}
+	uid := authorization.GetUid(c)
+	cid := authorization.GetCid(c)
 	mime := "text/plain"
 	content := ""
-	err = echo.QueryParamsBinder(c).String(keyMime, &mime).String(keyContent, &content).BindError()
+	err := echo.QueryParamsBinder(c).String(keyMime, &mime).String(keyContent, &content).BindError()
 	if err != nil {
 		return echo.ErrBadRequest
 	}
@@ -95,12 +89,9 @@ func PostMessage(c echo.Context) error {
 	}()
 
 	// add reverse contact and check if blocked
-	chat, err := dao.FetchChat(cid, false)
-	if err != nil {
-		return err
-	}
+	chat := authorization.GetChat(c)
 	if chat.Direct { // only handle direct chats
-		uidsMap, err := dao.GetUids(cid)
+		uidsMap, err := dao.GetUids(true, cid)
 		if err != nil {
 			return err
 		}

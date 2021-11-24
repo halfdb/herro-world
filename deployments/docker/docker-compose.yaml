@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_DATABASE
+      - MYSQL_ROOT_PASSWORD
+    volumes:
+      - ../volumes/mysql/data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    platform: linux/amd64
+
+  db_migrator:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/db_migrator.dockerfile
+    environment:
+      DB_STRING: root:$MYSQL_ROOT_PASSWORD@tcp(db:3306)/$MYSQL_DATABASE?parseTime=true
+    command: sh -c "./scripts/wait-for.sh db:3306 -t 300 -- make db-up"
+
+  herro_server:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/herro_server.dockerfile
+    environment:
+      JWT_SECRET: $JWT_SECRET
+      PORT: $PORT
+      DB_STRING: root:$MYSQL_ROOT_PASSWORD@tcp(db:3306)/$MYSQL_DATABASE?parseTime=true
+    ports:
+      - $PORT:$PORT
+    command: sh -c "./scripts/wait-for.sh db:3306 -t 300 -- ./bin/herro-world"

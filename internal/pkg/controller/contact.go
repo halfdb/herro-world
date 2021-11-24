@@ -2,7 +2,7 @@ package controller
 
 import (
 	"database/sql"
-	"github.com/halfdb/herro-world/internal/pkg/auth"
+	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
@@ -10,22 +10,18 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/volatiletech/null/v8"
 	"net/http"
-	"strconv"
-	"time"
 )
 
 const (
-	keyUidSelf     = "uid_self"
 	keyUidOther    = "uid_other"
 	keyDisplayName = "display_name"
-	keyCid         = "cid"
 	keyDeletedAt   = "deleted_at"
 	keyBlocked     = "blocked"
 	keyBlockedAt   = "blocked_at"
 )
 
 func PostContacts(c echo.Context) error {
-	uid := auth.GetUid(c)
+	uid := authorization.GetUid(c)
 	// parse param
 	uidOther := 0
 	displayName := ""
@@ -59,6 +55,7 @@ func PostContacts(c echo.Context) error {
 	switch {
 	case err == sql.ErrNoRows: // does not exist
 		// create contact
+		c.Logger().Debug("not added before, create chat and contact")
 		contact = &models.Contact{
 			UIDSelf:     uid,
 			UIDOther:    uidOther,
@@ -76,6 +73,8 @@ func PostContacts(c echo.Context) error {
 		c.Logger().Debug("restoring user chat")
 		err := dao.RestoreUserChat(tx, contact.UIDSelf, contact.Cid)
 		if err != nil {
+			c.Logger().Error("failed to restore user chat")
+			c.Logger().Error(err)
 			return err
 		}
 		// restore contact
@@ -83,6 +82,8 @@ func PostContacts(c echo.Context) error {
 		contact.DisplayName = null.NewString(displayName, displayName != "")
 		contact, err = dao.RestoreContact(tx, contact)
 		if err != nil {
+			c.Logger().Error("failed to restore contact")
+			c.Logger().Error(err)
 			return err
 		}
 	case err == nil && !contact.DeletedAt.Valid:
@@ -110,7 +111,7 @@ func convertContact(original *models.Contact) *dto.Contact {
 }
 
 func GetContacts(c echo.Context) error {
-	uid := auth.GetUid(c)
+	uid := authorization.GetUid(c)
 	boilContacts, err := dao.FetchAllContacts(uid, false, false)
 	if err != nil {
 		return err
@@ -125,7 +126,7 @@ func GetContacts(c echo.Context) error {
 
 func PatchContact(c echo.Context) error {
 	// parse uids
-	uidSelf := auth.GetUid(c)
+	uidSelf := authorization.GetUid(c)
 	uidOther := 0
 	err := echo.PathParamsBinder(c).Int(keyUidOther, &uidOther).BindError()
 	if err != nil || uidOther == 0 {
@@ -136,53 +137,42 @@ func PatchContact(c echo.Context) error {
 	// parse query params
 	updates := models.M{}
 	params := c.QueryParams()
-	if len(params) == 0 {
+	if !params.Has(keyDisplayName) {
 		c.Logger().Error("invalid parameter")
 		return echo.ErrBadRequest
 	}
-	for key, value := range params {
-		switch key {
-		case keyDisplayName:
-			updates[keyDisplayName] = value[0]
-		case keyBlocked:
-			blocked, err := strconv.ParseBool(value[0])
-			if err != nil || !blocked {
-				c.Logger().Error("invalid parameter")
-				return echo.ErrBadRequest
-			}
-			now := time.Now()
-			updates[keyBlockedAt] = now
-			updates[keyDeletedAt] = now
-		}
-	}
+	updates[keyDisplayName] = params.Get(keyDisplayName)
 
 	// update
-	err = dao.UpdateContact(uidSelf, uidOther, updates)
-	if err == sql.ErrNoRows {
-		return echo.ErrNotFound
-	} else if err != nil {
+	err = dao.UpdateContact(common.GetDB(), uidSelf, uidOther, updates)
+	if err != nil && err != sql.ErrNoRows {
 		c.Logger().Error("failed to update contact")
 		return err
 	}
 
 	// fetch
 	contact, err := dao.FetchContact(uidSelf, uidOther, true)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return echo.ErrNotFound
+	} else if err != nil {
 		c.Logger().Error("failed to fetch contact")
-		return echo.ErrInternalServerError
-	}
-	if contact.DeletedAt.Valid {
-		return c.String(http.StatusOK, "")
+		return err
 	}
 	return c.JSON(http.StatusOK, convertContact(contact))
 }
 
 func DeleteContact(c echo.Context) error {
 	// parse uids
-	uidSelf := auth.GetUid(c)
+	uidSelf := authorization.GetUid(c)
 	uidOther := 0
 	err := echo.PathParamsBinder(c).Int(keyUidOther, &uidOther).BindError()
 	if err != nil || uidOther == 0 {
+		c.Logger().Error("invalid parameter")
+		return echo.ErrBadRequest
+	}
+	blocked := false
+	err = echo.QueryParamsBinder(c).Bool(keyBlocked, &blocked).BindError()
+	if err != nil {
 		c.Logger().Error("invalid parameter")
 		return echo.ErrBadRequest
 	}
@@ -203,24 +193,8 @@ func DeleteContact(c echo.Context) error {
 		}
 	}()
 
-	// find out cid first
-	cid, err := dao.LookupDirectChat(uidSelf, uidOther, false)
-	if err == sql.ErrNoRows {
-		return echo.ErrNotFound
-	} else if err != nil {
-		return err
-	}
-	// delete user_chat
-	err = dao.DeleteUserChat(tx, uidSelf, cid)
-	if err == sql.ErrNoRows {
-		c.Logger().Error("unexpected: failed to delete user_chat")
-		return echo.ErrInternalServerError
-	} else if err != nil {
-		return err
-	}
-
 	// delete contact
-	err = dao.DeleteContact(tx, uidSelf, uidOther)
+	err = dao.DeleteContact(tx, uidSelf, uidOther, blocked)
 	if err == sql.ErrNoRows {
 		return echo.ErrNotFound
 	} else if err != nil {

@@ -13,10 +13,16 @@ models:
 	sqlboiler --wipe --add-global-variants --no-context --add-soft-deletes --no-tests mysql -c $(SQLBOILER_TOML) -o $(PKG)/models
 
 db-up:
-	goose -v -dir $(PWD)/deployments/database mysql $$DB_STRING up
+	goose -dir $(PWD)/deployments/database mysql $$DB_STRING up
 
 db-down:
-	goose -v -dir $(PWD)/deployments/database mysql $$DB_STRING down
+	goose -dir $(PWD)/deployments/database mysql $$DB_STRING down
 
 server:
 	go build -v -o $(SERVER_BIN) $(CMD)/server
+
+compose-up: deployments/docker/.env
+	docker-compose -f deployments/docker/docker-compose.yaml -p herro_world up
+
+deployments/docker/.env:
+	cp deployments/docker/.env.example deployments/docker/.env

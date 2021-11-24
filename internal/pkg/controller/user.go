@@ -1,7 +1,8 @@
 package controller
 
 import (
-	"github.com/halfdb/herro-world/internal/pkg/auth"
+	"database/sql"
+	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
 	"github.com/halfdb/herro-world/pkg/dto"
@@ -12,7 +13,6 @@ import (
 
 const (
 	keyUid           = "uid"
-	keyLoginName     = "login_name"
 	keyNickname      = "nickname"
 	keyShowLoginName = "show_login_name"
 	keyPassword      = "password"
@@ -40,12 +40,14 @@ func GetUserInfo(c echo.Context) error {
 	}
 
 	user, err := dao.FetchUser(uid)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return echo.ErrNotFound
+	} else if err != nil {
 		c.Logger().Error("failed to fetch user")
 		return err
 	}
 	// hide login name
-	if auth.GetUid(c) != user.UID && !user.ShowLoginName {
+	if authorization.GetUid(c) != user.UID && !user.ShowLoginName {
 		user.LoginName = ""
 	}
 	return c.JSON(http.StatusOK, convertUser(user))
@@ -53,7 +55,7 @@ func GetUserInfo(c echo.Context) error {
 
 // PatchUserInfo asserts user is authorized, so the uid in token is same with that in query params
 func PatchUserInfo(c echo.Context) error {
-	uid := auth.GetUid(c)
+	uid := authorization.GetUid(c)
 
 	values := c.QueryParams()
 	updates := make(models.M)
@@ -77,8 +79,10 @@ func PatchUserInfo(c echo.Context) error {
 	}
 
 	if err := dao.UpdateUser(uid, updates); err != nil {
-		c.Logger().Error("failed to update user")
-		return err
+		if err != sql.ErrNoRows {
+			c.Logger().Error("failed to update user")
+			return err
+		}
 	}
 
 	user, err := dao.FetchUser(uid)
