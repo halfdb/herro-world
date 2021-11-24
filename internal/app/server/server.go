@@ -42,6 +42,7 @@ func New(address string, db *sql.DB) error {
 	e.GET("/users/:uid/chats", controller.GetChats, authorization.AuthorizeSelf)
 	e.GET("/chats/:cid/messages", controller.GetMessages, authorization.AuthorizeChatMember)
 	e.POST("/chats/:cid/messages", controller.PostMessage, authorization.AuthorizeChatMember)
+	e.POST("/chats", controller.PostChats)
 
 	// Start server
 	return e.Start(address)

@@ -10,6 +10,7 @@ import (
 )
 
 func CreateChat(executor boil.Executor, name *string, direct bool, uids ...int) (*models.Chat, error) {
+	// TODO refactoring: change executors in multi-step functions to tx
 	// sanity check
 	if len(uids) < 2 || (direct && len(uids) != 2) || (direct && name != nil) {
 		return nil, errors.New("invalid parameter while creating chat")
@@ -22,7 +23,7 @@ func CreateChat(executor boil.Executor, name *string, direct bool, uids ...int) 
 		chat.Name = null.StringFrom(*name)
 	}
 
-	if err := chat.Insert(executor, boil.Infer()); err != nil {
+	if err := chat.Insert(executor, boil.Greylist(models.ChatColumns.Direct)); err != nil {
 		return nil, err
 	}
 	cid := chat.Cid
