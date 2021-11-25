@@ -4,17 +4,15 @@
 package models
 
 var TableNames = struct {
-	Chat           string
-	Contact        string
-	GooseDBVersion string
-	Message        string
-	User           string
-	UserChat       string
+	Chat     string
+	Contact  string
+	Message  string
+	User     string
+	UserChat string
 }{
-	Chat:           "chat",
-	Contact:        "contact",
-	GooseDBVersion: "goose_db_version",
-	Message:        "message",
-	User:           "user",
-	UserChat:       "user_chat",
+	Chat:     "chat",
+	Contact:  "contact",
+	Message:  "message",
+	User:     "user",
+	UserChat: "user_chat",
 }
