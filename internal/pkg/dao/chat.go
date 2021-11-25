@@ -62,34 +62,7 @@ func FetchChat(cid int, withDeleted bool) (*models.Chat, error) {
 	return models.Chats(mods...).One(common.GetDB())
 }
 
-func FetchVisibleChats(uid int) (models.ChatSlice, error) {
-	contacts, err := FetchAllContacts(uid, false, false)
-	if err != nil {
-		return nil, err
-	}
-	visibleDirectCids := make([]int, len(contacts))
-	for i, contact := range contacts {
-		visibleDirectCids[i] = contact.Cid
-	}
-	mods := append(make([]qm.QueryMod, 0),
-		qm.Select(
-			models.ChatTableColumns.Cid+" as "+models.ChatColumns.Cid,
-			models.ChatTableColumns.Direct+" as "+models.ChatColumns.Direct,
-			models.ChatTableColumns.Name+" as "+models.ChatColumns.Name,
-		),
-		qm.InnerJoin(
-			models.TableNames.UserChat+" on "+models.UserChatTableColumns.Cid+" = "+models.ChatTableColumns.Cid,
-		),
-		models.UserChatWhere.UID.EQ(uid),
-		qm.Expr(
-			models.ChatWhere.Cid.IN(visibleDirectCids), // visible direct chats
-			qm.Or2(models.ChatWhere.Direct.EQ(false)),  // group chats
-		),
-	)
-	return models.Chats(mods...).All(common.GetDB())
-}
-
-func FetchAllChats(uid int, withDeleted bool) (models.ChatSlice, error) {
+func FetchAllChats(uid int, withDeletedUserChat bool) (models.ChatSlice, error) {
 	mods := append(make([]qm.QueryMod, 0),
 		qm.Select(
 			models.ChatTableColumns.Cid+" as "+models.ChatColumns.Cid,
@@ -101,8 +74,8 @@ func FetchAllChats(uid int, withDeleted bool) (models.ChatSlice, error) {
 		),
 		models.UserChatWhere.UID.EQ(uid),
 	)
-	if withDeleted {
-		mods = append(mods, qm.WithDeleted())
+	if !withDeletedUserChat {
+		mods = append(mods, models.UserChatWhere.DeletedAt.IsNull())
 	}
 	return models.Chats(mods...).All(common.GetDB())
 }

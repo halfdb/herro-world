@@ -53,7 +53,7 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 
 func GetChats(c echo.Context) error {
 	uid := authorization.GetUid(c)
-	chats, err := dao.FetchVisibleChats(uid)
+	chats, err := dao.FetchAllChats(uid, false)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,10 @@ func PostChats(c echo.Context) error {
 	uids := make([]int, 0)
 	name := ""
 	namePtr := &name
-	echo.QueryParamsBinder(c).Ints(keyUids, &uids).String(keyName, namePtr)
+	err := echo.QueryParamsBinder(c).Ints(keyUids, &uids).String(keyName, namePtr).BindError()
+	if err != nil {
+		return err
+	}
 
 	// sanity check
 	uids = common.UniqueInt(uids)
