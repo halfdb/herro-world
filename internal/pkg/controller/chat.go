@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"errors"
 	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/common"
@@ -52,6 +53,7 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 }
 
 func GetChats(c echo.Context) error {
+	// TODO show left members in direct chats
 	uid := authorization.GetUid(c)
 	chats, err := dao.FetchAllChats(uid, false)
 	if err != nil {
@@ -135,4 +137,93 @@ func PostChats(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, convertChat(chat, uids))
+}
+
+func GetChatMembers(c echo.Context) error {
+	uid := authorization.GetUid(c)
+	cid := authorization.GetCid(c)
+	uidsMap, err := dao.GetUids(false, cid)
+	if err != nil {
+		return err
+	}
+	uids := uidsMap[cid]
+
+	userSlice, err := dao.FetchUsers(uids...)
+	users := make([]*dto.User, len(userSlice))
+	for i, user := range userSlice {
+		if user.UID != uid && !user.ShowLoginName {
+			user.LoginName = ""
+		}
+		users[i] = convertUser(user)
+	}
+
+	return c.JSON(http.StatusOK, users)
+}
+
+func PostChatMembers(c echo.Context) error {
+	uid := authorization.GetUid(c)
+	cid := authorization.GetCid(c)
+	chat := authorization.GetChat(c)
+	// only adding to groups is allowed
+	if chat.Direct {
+		return echo.ErrBadRequest
+	}
+
+	uids := make([]int, 0)
+	err := echo.QueryParamsBinder(c).Ints(keyUids, &uids).BindError()
+	if err != nil {
+		return err
+	}
+	uids = common.UniqueInt(uids)
+
+	for _, uidOther := range uids {
+		if uidOther == uid {
+			continue
+		}
+		exists, err := dao.ContactExists(uid, uidOther, false)
+		if err != nil {
+			return err
+		} else if !exists {
+			return echo.ErrForbidden
+		}
+	}
+
+	err = common.DoInTx(func(tx *sql.Tx) error {
+		for _, uidOther := range uids {
+			userChat, err := dao.FetchUserChat(uidOther, cid, true)
+			switch {
+			case err == sql.ErrNoRows: // user_chat does not exist, create it
+				userChat, err = dao.CreateUserChat(tx, uidOther, cid)
+			case err != nil: // error
+				// do nothing
+			case userChat.DeletedAt.Valid: // user_chat deleted, restore it
+				err = dao.RestoreUserChat(tx, uidOther, cid)
+			default: // user_chat exists
+				// do nothing
+			}
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return GetChatMembers(c)
+}
+
+func DeleteChatMember(c echo.Context) error {
+	uid := authorization.GetUid(c)
+	cid := authorization.GetCid(c)
+
+	err := common.DoInTx(func(tx *sql.Tx) error {
+		return dao.DeleteUserChat(tx, uid, cid)
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.String(http.StatusOK, "")
 }
