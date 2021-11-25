@@ -69,8 +69,15 @@ func PostContacts(c echo.Context) error {
 			UIDOther:    uidOther,
 			DisplayName: null.NewString(displayName, true),
 		}
-
-		contact, err = dao.CreateContact(tx, contact, true)
+		cid, err := dao.LookupDirectChat(uidOther, uid, true)
+		if err == sql.ErrNoRows {
+			contact, err = dao.CreateContact(tx, contact, true)
+		} else if err != nil {
+			return err
+		} else {
+			contact.Cid = cid
+			contact, err = dao.CreateContact(tx, contact, false)
+		}
 		if err != nil {
 			c.Logger().Error("failed to create contact")
 			c.Logger().Error(err)
