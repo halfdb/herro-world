@@ -91,7 +91,7 @@ func PostMessage(c echo.Context) error {
 	// add reverse contact and check if blocked
 	chat := authorization.GetChat(c)
 	if chat.Direct { // only handle direct chats
-		uidsMap, err := dao.GetUids(true, cid)
+		uidsMap, err := dao.GetMemberUids(true, cid)
 		if err != nil {
 			return err
 		}

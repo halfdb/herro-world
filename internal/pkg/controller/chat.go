@@ -24,12 +24,26 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 	}
 	uidsCh := make(chan map[int][]int, 1)
 	go func() {
-		uids, err := dao.GetUids(false, cids...)
+		directCids := make([]int, 0, len(chats))
+		groupCids := make([]int, 0, len(chats))
+		for _, chat := range chats {
+			if chat.Direct {
+				directCids = append(directCids, chat.Cid)
+			} else {
+				groupCids = append(groupCids, chat.Cid)
+			}
+		}
+		directUids, err := dao.GetMemberUids(true, directCids...)
 		if err != nil {
 			close(uidsCh)
 			return
 		}
-		uidsCh <- uids
+		groupUids, err := dao.GetMemberUids(false, groupCids...)
+		// reuse directUids
+		for cid, uids := range groupUids {
+			directUids[cid] = uids
+		}
+		uidsCh <- directUids
 	}()
 
 	result := make([]*dto.Chat, len(chats))
@@ -53,7 +67,6 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 }
 
 func GetChats(c echo.Context) error {
-	// TODO show left members in direct chats
 	uid := authorization.GetUid(c)
 	chats, err := dao.FetchAllChats(uid, false)
 	if err != nil {
@@ -142,7 +155,7 @@ func PostChats(c echo.Context) error {
 func GetChatMembers(c echo.Context) error {
 	uid := authorization.GetUid(c)
 	cid := authorization.GetCid(c)
-	uidsMap, err := dao.GetUids(false, cid)
+	uidsMap, err := dao.GetMemberUids(false, cid)
 	if err != nil {
 		return err
 	}
