@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"database/sql"
 	"errors"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/models"
@@ -9,7 +10,7 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-func CreateChat(executor boil.Executor, name *string, direct bool, uids ...int) (*models.Chat, error) {
+func CreateChat(tx *sql.Tx, name *string, direct bool, uids ...int) (*models.Chat, error) {
 	// TODO refactoring: change executors in multi-step functions to tx
 	// sanity check
 	if len(uids) < 2 || (direct && len(uids) != 2) || (direct && name != nil) {
@@ -23,12 +24,12 @@ func CreateChat(executor boil.Executor, name *string, direct bool, uids ...int) 
 		chat.Name = null.StringFrom(*name)
 	}
 
-	if err := chat.Insert(executor, boil.Greylist(models.ChatColumns.Direct)); err != nil {
+	if err := chat.Insert(tx, boil.Greylist(models.ChatColumns.Direct)); err != nil {
 		return nil, err
 	}
 	cid := chat.Cid
 	for _, uid := range uids {
-		_, err := CreateUserChat(executor, uid, cid)
+		_, err := CreateUserChat(tx, uid, cid)
 		if err != nil {
 			return nil, err
 		}

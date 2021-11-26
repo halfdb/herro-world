@@ -129,22 +129,11 @@ func PostChats(c echo.Context) error {
 		namePtr = nil
 	}
 
-	// begin tx
-	tx, err := common.BeginTx()
-	if err != nil {
+	var chat *models.Chat
+	err = common.DoInTx(func(tx *sql.Tx) error {
+		chat, err = dao.CreateChat(tx, namePtr, false, uids...)
 		return err
-	}
-	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback()
-			panic(p) // re-throw panic after Rollback
-		} else if err != nil {
-			_ = tx.Rollback() // err is non-nil; don't change it
-		} else {
-			err = tx.Commit() // err is nil; if Commit returns error update err
-		}
-	}()
-	chat, err := dao.CreateChat(tx, namePtr, false, uids...)
+	})
 	if err != nil {
 		return err
 	}
