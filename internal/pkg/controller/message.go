@@ -125,6 +125,10 @@ func PostMessage(c echo.Context) error {
 			if err != nil {
 				return err
 			}
+			err = dao.RestoreUserChat(tx, uidOther, cid)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
