@@ -34,3 +34,7 @@ func UpdateUser(uid int, updates models.M) error {
 func FetchUser(uid int) (*models.User, error) {
 	return models.Users(models.UserWhere.UID.EQ(uid)).One(common.GetDB())
 }
+
+func FetchUsers(uids ...int) (models.UserSlice, error) {
+	return models.Users(models.UserWhere.UID.IN(uids)).All(common.GetDB())
+}

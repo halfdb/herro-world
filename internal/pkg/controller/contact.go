@@ -15,9 +15,7 @@ import (
 const (
 	keyUidOther    = "uid_other"
 	keyDisplayName = "display_name"
-	keyDeletedAt   = "deleted_at"
 	keyBlocked     = "blocked"
-	keyBlockedAt   = "blocked_at"
 )
 
 func PostContacts(c echo.Context) error {
@@ -56,13 +54,30 @@ func PostContacts(c echo.Context) error {
 	case err == sql.ErrNoRows: // does not exist
 		// create contact
 		c.Logger().Debug("not added before, create chat and contact")
+		user, err := dao.FetchUser(uidOther)
+		if err == sql.ErrNoRows {
+			c.Logger().Info("target user does not exist")
+			return echo.ErrNotFound
+		} else if err != nil {
+			return err
+		}
+		if displayName == "" {
+			displayName = user.Nickname.String
+		}
 		contact = &models.Contact{
 			UIDSelf:     uid,
 			UIDOther:    uidOther,
-			DisplayName: null.NewString(displayName, displayName != ""),
+			DisplayName: null.NewString(displayName, true),
 		}
-
-		contact, err = dao.CreateContact(tx, contact, true)
+		cid, err := dao.LookupDirectChat(uidOther, uid, true)
+		if err == sql.ErrNoRows {
+			contact, err = dao.CreateContact(tx, contact, true)
+		} else if err != nil {
+			return err
+		} else {
+			contact.Cid = cid
+			contact, err = dao.CreateContact(tx, contact, false)
+		}
 		if err != nil {
 			c.Logger().Error("failed to create contact")
 			c.Logger().Error(err)

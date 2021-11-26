@@ -65,7 +65,7 @@ func updateUserChat(executor boil.Executor, userChat *models.UserChat) error {
 	return nil
 }
 
-func GetUids(withDeleted bool, cids ...int) (map[int][]int, error) {
+func GetMemberUids(withDeleted bool, cids ...int) (map[int][]int, error) {
 	mods := append(make([]qm.QueryMod, 0),
 		models.UserChatWhere.Cid.IN(cids),
 	)

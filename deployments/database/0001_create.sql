@@ -50,9 +50,9 @@ CREATE TABLE `contact` (
 `blocked_at` TIMESTAMP,
 -- 両方のUIDの組み合わせが主キーになる
 PRIMARY KEY (`uid_self`, `uid_other`),
-FOREIGN KEY (`uid_self`) REFERENCES `user`(`uid`),
-FOREIGN KEY (`uid_other`) REFERENCES `user`(`uid`),
-FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
+CONSTRAINT contact_ibfk_1 FOREIGN KEY (`uid_self`) REFERENCES `user`(`uid`),
+CONSTRAINT contact_ibfk_2 FOREIGN KEY (`uid_other`) REFERENCES `user`(`uid`),
+CONSTRAINT contact_ibfk_3 FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
 );
 
 CREATE TABLE `user_chat` (
@@ -65,8 +65,8 @@ CREATE TABLE `user_chat` (
 `deleted_at` TIMESTAMP,
 -- 組み合わせが主キー
 PRIMARY KEY (`uid`, `cid`),
-FOREIGN KEY (`uid`) REFERENCES `user`(`uid`),
-FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
+CONSTRAINT user_chat_ibfk_1 FOREIGN KEY (`uid`) REFERENCES `user`(`uid`),
+CONSTRAINT user_chat_ibfk_2 FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
 );
 
 CREATE TABLE `message` (
@@ -85,8 +85,8 @@ CREATE TABLE `message` (
 `updated_at` TIMESTAMP NOT NULL,
 `deleted_at` TIMESTAMP,
 PRIMARY KEY (`mid`),
-FOREIGN KEY (`uid`) REFERENCES `user`(`uid`),
-FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
+CONSTRAINT message_ibfk_1 FOREIGN KEY (`uid`) REFERENCES `user`(`uid`),
+CONSTRAINT message_ibfk_2 FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
 );
 
 
