@@ -11,7 +11,6 @@ import (
 )
 
 func CreateChat(tx *sql.Tx, name *string, direct bool, uids ...int) (*models.Chat, error) {
-	// TODO refactoring: change executors in multi-step functions to tx
 	// sanity check
 	if len(uids) < 2 || (direct && len(uids) != 2) || (direct && name != nil) {
 		return nil, errors.New("invalid parameter while creating chat")
