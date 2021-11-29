@@ -18,7 +18,7 @@ services:
     working_dir: /go/src/github.com/halfdb/herro-world
     environment:
       DB_STRING: root:$MYSQL_ROOT_PASSWORD@tcp(db:3306)/$MYSQL_DATABASE?parseTime=true
-    command: sh -c "apk add build-base && go install github.com/pressly/goose/v3/cmd/goose@v3.3.1 && ./scripts/wait-for.sh db:3306 -t 300 && make db-up && nc -l -p 4242"
+    command: sh -c "apk add build-base && go install github.com/pressly/goose/v3/cmd/goose@v3.3.1 && ./scripts/wait-for.sh db:3306 -t 300 && make db-up && nc -lk -p 4242 -e cat"
     ports:
       - 4242:4242
 
