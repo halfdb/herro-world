@@ -70,7 +70,10 @@ func PostContacts(c echo.Context) error {
 		case err == nil && contact.DeletedAt.Valid: // contact has been deleted before
 			// restore user_chat
 			c.Logger().Debug("restoring user chat")
-			err := dao.RestoreUserChat(tx, contact.UIDSelf, contact.Cid)
+			err := dao.RestoreUserChat(tx, &models.UserChat{
+				UID: contact.UIDSelf,
+				Cid: contact.Cid,
+			})
 			if err != nil {
 				c.Logger().Error("failed to restore user chat")
 				c.Logger().Error(err)
@@ -110,7 +113,7 @@ func convertContact(original *models.Contact) *dto.Contact {
 
 func GetContacts(c echo.Context) error {
 	uid := authorization.GetUid(c)
-	boilContacts, err := dao.FetchAllContacts(uid, false, false)
+	boilContacts, err := dao.LookupAllContacts(uid, false, false)
 	if err != nil {
 		return err
 	}
@@ -133,29 +136,37 @@ func PatchContact(c echo.Context) error {
 	}
 
 	// parse query params
-	updates := models.M{}
 	params := c.QueryParams()
 	if !params.Has(keyDisplayName) {
 		c.Logger().Error("invalid parameter")
 		return echo.ErrBadRequest
 	}
-	updates[keyDisplayName] = params.Get(keyDisplayName)
-
-	// update
-	err = dao.UpdateContact(common.GetDB(), uidSelf, uidOther, updates)
-	if err != nil && err != sql.ErrNoRows {
-		c.Logger().Error("failed to update contact")
-		return err
-	}
+	displayName := params.Get(keyDisplayName)
 
 	// fetch
-	contact, err := dao.FetchContact(uidSelf, uidOther, true)
+	contact, err := dao.FetchContact(uidSelf, uidOther, false)
 	if err == sql.ErrNoRows {
 		return echo.ErrNotFound
 	} else if err != nil {
 		c.Logger().Error("failed to fetch contact")
 		return err
 	}
+
+	if contact.DisplayName.Valid && contact.DisplayName.String != displayName {
+		contact.DisplayName = null.StringFrom(displayName)
+		err = common.DoInTx(func(tx *sql.Tx) error {
+			// update
+			err := dao.UpdateContact(tx, contact)
+			if err != nil && err != sql.ErrNoRows {
+				c.Logger().Error("failed to update contact")
+			}
+			return err
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	return c.JSON(http.StatusOK, convertContact(contact))
 }
 
@@ -175,9 +186,18 @@ func DeleteContact(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
+	// fetch
+	contact, err := dao.FetchContact(uidSelf, uidOther, false)
+	if err == sql.ErrNoRows {
+		return echo.ErrNotFound
+	} else if err != nil {
+		c.Logger().Error("failed to fetch contact")
+		return err
+	}
+
 	err = common.DoInTx(func(tx *sql.Tx) error {
 		// delete contact
-		err := dao.DeleteContact(tx, uidSelf, uidOther, blocked)
+		err := dao.DeleteContact(tx, contact, blocked)
 		if err == sql.ErrNoRows {
 			return echo.ErrNotFound
 		} else if err != nil {

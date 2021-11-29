@@ -24,7 +24,7 @@ func FetchContact(uidSelf, uidOther int, withDeleted bool) (*models.Contact, err
 	return models.Contacts(mods...).One(common.GetDB())
 }
 
-func ContactExists(uidSelf, uidOther int, withDeleted bool) (bool, error) {
+func ExistContact(uidSelf, uidOther int, withDeleted bool) (bool, error) {
 	_, err := FetchContact(uidSelf, uidOther, withDeleted)
 	if err == sql.ErrNoRows { // no row
 		return false, nil
@@ -35,7 +35,7 @@ func ContactExists(uidSelf, uidOther int, withDeleted bool) (bool, error) {
 	}
 }
 
-func FetchAllContacts(uid int, withDeleted bool, withBlocked bool) (models.ContactSlice, error) {
+func LookupAllContacts(uid int, withDeleted bool, withBlocked bool) (models.ContactSlice, error) {
 	mods := append(make([]qm.QueryMod, 0),
 		qm.Select(models.ContactColumns.UIDOther, models.ContactColumns.DisplayName, models.ContactColumns.Cid),
 		models.ContactWhere.UIDSelf.EQ(uid),
@@ -49,11 +49,11 @@ func FetchAllContacts(uid int, withDeleted bool, withBlocked bool) (models.Conta
 	return models.Contacts(mods...).All(common.GetDB())
 }
 
-func UpdateContact(executor boil.Executor, uidSelf, uidOther int, updates models.M) error {
-	rowsAff, err := models.Contacts(
-		models.ContactWhere.UIDSelf.EQ(uidSelf),
-		models.ContactWhere.UIDOther.EQ(uidOther),
-	).UpdateAll(executor, updates)
+func UpdateContact(tx *sql.Tx, contact *models.Contact) error {
+	rowsAff, err := contact.Update(tx, boil.Infer())
+	if err != nil {
+		return err
+	}
 	if rowsAff == 0 {
 		return sql.ErrNoRows
 	} else if err != nil {
@@ -67,7 +67,10 @@ func UpdateContact(executor boil.Executor, uidSelf, uidOther int, updates models
 func CreateContact(tx *sql.Tx, contact *models.Contact, createChat bool) (*models.Contact, error) {
 	if createChat {
 		// create chat in advance
-		chat, err := CreateChat(tx, nil, true, contact.UIDSelf, contact.UIDOther) // direct chat does not have a name
+		chat := &models.Chat{
+			Direct: true,
+		}
+		chat, err := CreateChat(tx, chat, contact.UIDSelf, contact.UIDOther) // direct chat does not have a name
 		if err != nil {
 			return nil, err
 		}
@@ -80,15 +83,12 @@ func CreateContact(tx *sql.Tx, contact *models.Contact, createChat bool) (*model
 	return contact, nil
 }
 
-func DeleteContact(executor boil.Executor, uidSelf, uidOther int, block bool) error {
-	// fetch contact
-	contact, err := models.FindContact(executor, uidSelf, uidOther)
-	if err != nil {
-		return err
-	}
-
+func DeleteContact(tx *sql.Tx, contact *models.Contact, block bool) error {
 	// delete user_chat
-	err = DeleteUserChat(executor, uidSelf, contact.Cid)
+	err := DeleteUserChat(tx, &models.UserChat{
+		UID: contact.UIDSelf,
+		Cid: contact.Cid,
+	})
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func DeleteContact(executor boil.Executor, uidSelf, uidOther int, block bool) er
 	// block
 	if block {
 		contact.BlockedAt = null.NewTime(time.Now(), true)
-		rowsAff, err := contact.Update(executor, boil.Infer())
+		rowsAff, err := contact.Update(tx, boil.Infer())
 		if err != nil {
 			return err
 		} else if rowsAff != 1 {
@@ -104,7 +104,7 @@ func DeleteContact(executor boil.Executor, uidSelf, uidOther int, block bool) er
 		}
 	}
 	// delete
-	rowsAff, err := contact.Delete(executor, false)
+	rowsAff, err := contact.Delete(tx, false)
 	if rowsAff == 0 {
 		return sql.ErrNoRows
 	} else if err != nil {

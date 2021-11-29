@@ -5,22 +5,14 @@ import (
 	"errors"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/models"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-func CreateChat(tx *sql.Tx, name *string, direct bool, uids ...int) (*models.Chat, error) {
+func CreateChat(tx *sql.Tx, chat *models.Chat, uids ...int) (*models.Chat, error) {
 	// sanity check
-	if len(uids) < 2 || (direct && len(uids) != 2) || (direct && name != nil) {
+	if len(uids) < 2 || (chat.Direct && len(uids) != 2) || (chat.Direct && chat.Name.Valid) {
 		return nil, errors.New("invalid parameter while creating chat")
-	}
-
-	chat := &models.Chat{
-		Direct: direct,
-	}
-	if name != nil {
-		chat.Name = null.StringFrom(*name)
 	}
 
 	if err := chat.Insert(tx, boil.Greylist(models.ChatColumns.Direct)); err != nil {
@@ -28,7 +20,11 @@ func CreateChat(tx *sql.Tx, name *string, direct bool, uids ...int) (*models.Cha
 	}
 	cid := chat.Cid
 	for _, uid := range uids {
-		_, err := CreateUserChat(tx, uid, cid)
+		userChat := &models.UserChat{
+			UID: uid,
+			Cid: cid,
+		}
+		_, err := CreateUserChat(tx, userChat)
 		if err != nil {
 			return nil, err
 		}
@@ -62,7 +58,7 @@ func FetchChat(cid int, withDeleted bool) (*models.Chat, error) {
 	return models.Chats(mods...).One(common.GetDB())
 }
 
-func FetchAllChats(uid int, withDeletedUserChat bool) (models.ChatSlice, error) {
+func LookupAllChats(uid int, withDeletedUserChat bool) (models.ChatSlice, error) {
 	mods := append(make([]qm.QueryMod, 0),
 		qm.Select(
 			models.ChatTableColumns.Cid+" as "+models.ChatColumns.Cid,

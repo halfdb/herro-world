@@ -2,18 +2,22 @@ package dao
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/models"
-	"github.com/labstack/echo/v4"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+	"strconv"
 )
 
-func UpdateUser(uid int, updates models.M) error {
+func UpdateUser(user *models.User) error {
 	return common.DoInTx(func(tx *sql.Tx) error {
-		rowsAff, err := models.Users(models.UserWhere.UID.EQ(uid)).UpdateAll(tx, updates)
+		rowsAff, err := user.Update(tx, boil.Infer())
 		if rowsAff == 0 {
 			return sql.ErrNoRows
-		} else if rowsAff != 1 || err != nil {
-			return echo.ErrInternalServerError
+		} else if err != nil {
+			return err
+		} else if rowsAff != 1 {
+			return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 		}
 		return nil
 	})

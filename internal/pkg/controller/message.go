@@ -76,7 +76,7 @@ func PostMessage(c echo.Context) error {
 	err = common.DoInTx(func(tx *sql.Tx) error { // add reverse contact and check if blocked
 		chat := authorization.GetChat(c)
 		if chat.Direct { // only handle direct chats
-			uidsMap, err := dao.GetMemberUids(true, cid)
+			uidsMap, err := dao.LookupMemberUids(true, cid)
 			if err != nil {
 				return err
 			}
@@ -110,7 +110,10 @@ func PostMessage(c echo.Context) error {
 				if err != nil {
 					return err
 				}
-				err = dao.RestoreUserChat(tx, uidOther, cid)
+				err = dao.RestoreUserChat(tx, &models.UserChat{
+					UID: uidOther,
+					Cid: cid,
+				})
 				if err != nil {
 					return err
 				}

@@ -7,6 +7,7 @@ import (
 	"github.com/halfdb/herro-world/internal/pkg/models"
 	"github.com/halfdb/herro-world/pkg/dto"
 	"github.com/labstack/echo/v4"
+	"github.com/volatiletech/null/v8"
 	"net/http"
 	"strconv"
 )
@@ -57,38 +58,56 @@ func GetUserInfo(c echo.Context) error {
 func PatchUserInfo(c echo.Context) error {
 	uid := authorization.GetUid(c)
 
-	values := c.QueryParams()
-	updates := make(models.M)
-	for _, param := range []string{keyNickname, keyShowLoginName, keyPassword} {
-		value := values.Get(param)
-		if value != "" {
-			updates[param] = value
-		}
+	user, err := dao.FetchUser(uid)
+	if err == sql.ErrNoRows {
+		return echo.ErrNotFound
+	} else if err != nil {
+		c.Logger().Error("failed to fetch user")
+		return err
 	}
-	if len(updates) == 0 {
+
+	values := c.QueryParams()
+	if len(values) == 0 {
 		c.Logger().Error("no parameters provided")
 		return echo.ErrBadRequest
 	}
-	if values.Get(keyShowLoginName) != "" { // implies that updates[keyShowLoginName] must be set
-		var err error
-		updates[keyShowLoginName], err = strconv.ParseBool(updates[keyShowLoginName].(string))
-		if err != nil {
-			c.Logger().Error("invalid bool string")
+	updates := 0
+	for key, strings := range values {
+		value := strings[0]
+		if value == "" {
+			continue
+		}
+		switch key {
+		case keyNickname:
+			if user.Nickname.Valid && user.Nickname.String != value {
+				user.Nickname = null.StringFrom(value)
+				updates += 1
+			}
+		case keyShowLoginName:
+			result, err := strconv.ParseBool(value)
+			if err != nil {
+				return echo.ErrBadRequest
+			}
+			if user.ShowLoginName != result {
+				user.ShowLoginName = result
+				updates += 1
+			}
+		case keyPassword:
+			if user.Password != value {
+				user.Password = value
+				updates += 1
+			}
+		default:
+			c.Logger().Error("unrecognised query param: " + key)
 			return echo.ErrBadRequest
 		}
 	}
 
-	if err := dao.UpdateUser(uid, updates); err != nil {
-		if err != sql.ErrNoRows {
+	if updates > 0 {
+		if err := dao.UpdateUser(user); err != nil {
 			c.Logger().Error("failed to update user")
 			return err
 		}
-	}
-
-	user, err := dao.FetchUser(uid)
-	if err != nil {
-		c.Logger().Error("failed to fetch user")
-		return err
 	}
 	return c.JSON(http.StatusOK, convertUser(user))
 }
