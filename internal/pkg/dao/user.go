@@ -26,7 +26,7 @@ func CreateUser(tx *sql.Tx, user *models.User) (*models.User, error) {
 	return user, err
 }
 
-func ExistUser(loginName string) (bool, error) {
+func ExistUserLoginName(loginName string) (bool, error) {
 	count, err := models.Users(models.UserWhere.LoginName.EQ(loginName)).Count(common.GetDB())
 	return count > 0, err
 }
@@ -34,11 +34,10 @@ func ExistUser(loginName string) (bool, error) {
 func UpdateUser(user *models.User) error {
 	return common.DoInTx(func(tx *sql.Tx) error {
 		rowsAff, err := user.Update(tx, boil.Infer())
-		if rowsAff == 0 {
-			return sql.ErrNoRows
-		} else if err != nil {
+		if err != nil {
 			return err
-		} else if rowsAff != 1 {
+		}
+		if rowsAff != 1 {
 			return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 		}
 		return nil
@@ -46,7 +45,11 @@ func UpdateUser(user *models.User) error {
 }
 
 func FetchUser(uid int) (*models.User, error) {
-	return models.Users(models.UserWhere.UID.EQ(uid)).One(common.GetDB())
+	user, err := models.Users(models.UserWhere.UID.EQ(uid)).One(common.GetDB())
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return user, err
 }
 
 func FetchUsers(uids ...int) (models.UserSlice, error) {

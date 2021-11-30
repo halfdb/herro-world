@@ -67,7 +67,7 @@ func Register(c echo.Context) error {
 		return err
 	}
 
-	exists, err := dao.ExistUser(loginName)
+	exists, err := dao.ExistUserLoginName(loginName)
 	if err != nil {
 		return err
 	}

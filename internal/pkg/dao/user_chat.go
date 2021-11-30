@@ -20,7 +20,11 @@ func FetchUserChat(uid, cid int, withDeleted bool) (*models.UserChat, error) {
 	if withDeleted {
 		mods = append(mods, qm.WithDeleted())
 	}
-	return models.UserChats(mods...).One(common.GetDB())
+	userChat, err := models.UserChats(mods...).One(common.GetDB())
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return userChat, err
 }
 
 func CreateUserChat(tx *sql.Tx, userChat *models.UserChat) (*models.UserChat, error) {
@@ -43,11 +47,10 @@ func RestoreUserChat(tx *sql.Tx, userChat *models.UserChat) error {
 
 func updateUserChat(tx *sql.Tx, userChat *models.UserChat) error {
 	rowsAff, err := userChat.Update(tx, boil.Infer())
-	if rowsAff == 0 {
-		return sql.ErrNoRows
-	} else if err != nil {
+	if err != nil {
 		return err
-	} else if rowsAff != 1 {
+	}
+	if rowsAff != 1 {
 		return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 	}
 	return nil

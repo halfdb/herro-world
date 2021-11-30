@@ -34,40 +34,46 @@ func PostContacts(c echo.Context) error {
 
 	// check if contact already exists
 	contact, err := dao.FetchContact(uid, uidOther, true)
+	if err != nil { // error
+		c.Logger().Error("error while checking contact existence")
+		return err
+	}
+	if contact != nil && !contact.DeletedAt.Valid { // already exists
+		return c.String(http.StatusConflict, "Already in contact.")
+	}
+
 	err = common.DoInTx(func(tx *sql.Tx) error {
-		switch {
-		case err == sql.ErrNoRows: // does not exist
-			// create contact
+		if contact == nil { // never existed before, create
 			c.Logger().Debug("not added before, create chat and contact")
+			// get user nickname
 			user, err := dao.FetchUser(uidOther)
-			if err == sql.ErrNoRows {
-				c.Logger().Info("target user does not exist")
-				return echo.ErrNotFound
-			} else if err != nil {
+			if err != nil {
 				return err
 			}
-			if displayName == "" {
+			if user == nil {
+				c.Logger().Info("target user does not exist")
+				return echo.ErrNotFound
+			}
+			if displayName == "" && user.Nickname.Valid {
 				displayName = user.Nickname.String
 			}
+			// create contact
 			contact = &models.Contact{
 				UIDSelf:     uid,
 				UIDOther:    uidOther,
 				DisplayName: null.NewString(displayName, true),
 			}
-			cid, err := dao.LookupDirectChat(uidOther, uid, true)
-			if err == sql.ErrNoRows {
-				contact, err = dao.CreateContact(tx, contact, true)
-			} else if err != nil {
+			contact.Cid, err = dao.LookupDirectChat(uidOther, uid, true)
+			if err != nil {
 				return err
-			} else {
-				contact.Cid = cid
-				contact, err = dao.CreateContact(tx, contact, false)
 			}
+			contact, err = dao.CreateContact(tx, contact, contact.Cid == 0)
+
 			if err != nil {
 				c.Logger().Error("failed to create contact")
 			}
 			return err
-		case err == nil && contact.DeletedAt.Valid: // contact has been deleted before
+		} else /* if contact.DeletedAt.Valid */ { // deleted before; restore
 			// restore user_chat
 			c.Logger().Debug("restoring user chat")
 			err := dao.RestoreUserChat(tx, &models.UserChat{
@@ -87,13 +93,7 @@ func PostContacts(c echo.Context) error {
 				c.Logger().Error("failed to restore contact")
 			}
 			return err
-		case err == nil && !contact.DeletedAt.Valid:
-			return c.String(http.StatusConflict, "Already in contact.")
-		default: // error
-			c.Logger().Error("error while checking contact existence")
-			return echo.ErrInternalServerError
 		}
-
 	})
 	if err != nil {
 		return err
@@ -114,6 +114,7 @@ func convertContact(original *models.Contact) *dto.Contact {
 func GetContacts(c echo.Context) error {
 	uid := authorization.GetUid(c)
 	boilContacts, err := dao.LookupAllContacts(uid, false, false)
+	c.Logger().Debug(boilContacts)
 	if err != nil {
 		return err
 	}
@@ -145,11 +146,12 @@ func PatchContact(c echo.Context) error {
 
 	// fetch
 	contact, err := dao.FetchContact(uidSelf, uidOther, false)
-	if err == sql.ErrNoRows {
-		return echo.ErrNotFound
-	} else if err != nil {
+	if err != nil {
 		c.Logger().Error("failed to fetch contact")
 		return err
+	}
+	if contact == nil {
+		return echo.ErrNotFound
 	}
 
 	if contact.DisplayName.Valid && contact.DisplayName.String != displayName {
@@ -157,7 +159,7 @@ func PatchContact(c echo.Context) error {
 		err = common.DoInTx(func(tx *sql.Tx) error {
 			// update
 			err := dao.UpdateContact(tx, contact)
-			if err != nil && err != sql.ErrNoRows {
+			if err != nil {
 				c.Logger().Error("failed to update contact")
 			}
 			return err
@@ -179,6 +181,7 @@ func DeleteContact(c echo.Context) error {
 		c.Logger().Error("invalid parameter")
 		return echo.ErrBadRequest
 	}
+	// parse blocked
 	blocked := false
 	err = echo.QueryParamsBinder(c).Bool(keyBlocked, &blocked).BindError()
 	if err != nil {
@@ -188,19 +191,18 @@ func DeleteContact(c echo.Context) error {
 
 	// fetch
 	contact, err := dao.FetchContact(uidSelf, uidOther, false)
-	if err == sql.ErrNoRows {
-		return echo.ErrNotFound
-	} else if err != nil {
+	if err != nil {
 		c.Logger().Error("failed to fetch contact")
 		return err
+	}
+	if contact == nil {
+		return echo.ErrNotFound
 	}
 
 	err = common.DoInTx(func(tx *sql.Tx) error {
 		// delete contact
 		err := dao.DeleteContact(tx, contact, blocked)
-		if err == sql.ErrNoRows {
-			return echo.ErrNotFound
-		} else if err != nil {
+		if err != nil {
 			c.Logger().Error("failed to delete contact")
 		}
 		return err

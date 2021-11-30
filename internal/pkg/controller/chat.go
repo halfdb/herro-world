@@ -192,22 +192,20 @@ func PostChatMembers(c echo.Context) error {
 	err = common.DoInTx(func(tx *sql.Tx) error {
 		for _, uidOther := range uids {
 			userChat, err := dao.FetchUserChat(uidOther, cid, true)
-			switch {
-			case err == sql.ErrNoRows: // user_chat does not exist, create it
+			if err != nil {
+				return err
+			}
+			if userChat == nil { // user_chat does not exist, create it
 				userChat = &models.UserChat{
 					UID: uid,
 					Cid: cid,
 				}
 				userChat, err = dao.CreateUserChat(tx, userChat)
-			case err != nil: // error
-				// do nothing
-			case userChat.DeletedAt.Valid: // user_chat deleted, restore it
+			} else if userChat.DeletedAt.Valid { // user_chat deleted, restore it
 				err = dao.RestoreUserChat(tx, &models.UserChat{
 					UID: uidOther,
 					Cid: cid,
 				})
-			default: // user_chat exists
-				// do nothing
 			}
 			if err != nil {
 				return err

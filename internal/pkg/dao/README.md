@@ -14,7 +14,7 @@
 * A function to get a row or multiple rows using their identifiers (e.g. primary key)
 * Should include a `withDeleted` param unless it's not necessary
 * Should not assume the existence of the required value
-* Must return `sql.ErrNoRows` as an error if no row is found
+* Must return nil if no row is found
 
 ## `Exist`
 * A function to check if an item exist
@@ -27,7 +27,7 @@
 * Usually involves complex sql queries
 * Should include `withDeleted<TableName>` params to decide whether deleted rows in the `<TableName>` would be considered
 * Should not assume the existence of the required value
-* Must return `sql.ErrNoRows` as the error if the row is not found
+* Must return nil if the row is not found
 * The type of return value depends on the lookup
 
 ## Writing verbs
@@ -60,4 +60,8 @@
 
 ## Read before write
 
-Get a DAO object before updating it. This practise confirms the existence of the target row and constrains the number of target rows to 1.
+Get a DAO object before updating it. This practise confirms the existence of the target row.
+
+## Handle `sql.ErrNoRows` within the package
+
+Instead, return `nil` or default values.

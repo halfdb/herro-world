@@ -21,18 +21,16 @@ func FetchContact(uidSelf, uidOther int, withDeleted bool) (*models.Contact, err
 	if withDeleted {
 		mods = append(mods, qm.WithDeleted())
 	}
-	return models.Contacts(mods...).One(common.GetDB())
+	contact, err := models.Contacts(mods...).One(common.GetDB())
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return contact, err
 }
 
 func ExistContact(uidSelf, uidOther int, withDeleted bool) (bool, error) {
-	_, err := FetchContact(uidSelf, uidOther, withDeleted)
-	if err == sql.ErrNoRows { // no row
-		return false, nil
-	} else if err != nil { // error
-		return false, err
-	} else { // exists
-		return true, nil
-	}
+	contact, err := FetchContact(uidSelf, uidOther, withDeleted)
+	return contact != nil, err
 }
 
 func LookupAllContacts(uid int, withDeleted bool, withBlocked bool) (models.ContactSlice, error) {
@@ -54,11 +52,7 @@ func UpdateContact(tx *sql.Tx, contact *models.Contact) error {
 	if err != nil {
 		return err
 	}
-	if rowsAff == 0 {
-		return sql.ErrNoRows
-	} else if err != nil {
-		return err
-	} else if rowsAff != 1 {
+	if rowsAff != 1 {
 		return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 	}
 	return nil
@@ -105,11 +99,10 @@ func DeleteContact(tx *sql.Tx, contact *models.Contact, block bool) error {
 	}
 	// delete
 	rowsAff, err := contact.Delete(tx, false)
-	if rowsAff == 0 {
-		return sql.ErrNoRows
-	} else if err != nil {
-		return echo.ErrInternalServerError
-	} else if rowsAff != 1 {
+	if err != nil {
+		return err
+	}
+	if rowsAff != 1 {
 		return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 	}
 	return nil
@@ -119,11 +112,10 @@ func RestoreContact(executor boil.Executor, contact *models.Contact) (*models.Co
 	contact.DeletedAt.Valid = false
 	contact.BlockedAt.Valid = false
 	rowsAff, err := contact.Update(executor, boil.Infer())
-	if rowsAff == 0 {
-		return nil, sql.ErrNoRows
-	} else if err != nil {
+	if err != nil {
 		return nil, echo.ErrInternalServerError
-	} else if rowsAff != 1 {
+	}
+	if rowsAff != 1 {
 		return nil, errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 	}
 	return contact, nil

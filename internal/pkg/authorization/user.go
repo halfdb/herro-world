@@ -48,7 +48,7 @@ func GetUid(c echo.Context) int {
 func AuthorizeSelf(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		c.Logger().Debug("check if user is allowed for the path")
-		queryUid := c.Param("uid")
+		queryUid := c.Param(keyUid)
 		tokenUid := strconv.Itoa(GetUid(c))
 		if queryUid != tokenUid {
 			c.Logger().Debug("no, not allowed")

@@ -89,8 +89,14 @@ func PostMessage(c echo.Context) error {
 			}
 
 			reverseContact, err := dao.FetchContact(uidOther, uid, true)
-			switch {
-			case err == sql.ErrNoRows: // create new contact
+			if err != nil {
+				return err
+			}
+			if reverseContact != nil && reverseContact.BlockedAt.Valid { // blocked by receiver, 403
+				return echo.ErrForbidden
+			}
+
+			if reverseContact == nil { // create new contact
 				reverseContact = &models.Contact{
 					UIDSelf:  uidOther,
 					UIDOther: uid,
@@ -101,11 +107,7 @@ func PostMessage(c echo.Context) error {
 					c.Logger().Error("failed to create reverse contact")
 					return err
 				}
-			case err != nil: // unknown error
-				return err
-			case reverseContact.BlockedAt.Valid: // blocked by receiver, 403
-				return echo.ErrForbidden
-			case reverseContact.DeletedAt.Valid: // not blocked, restore
+			} else if reverseContact.DeletedAt.Valid { // deleted but not blocked, restore
 				_, err = dao.RestoreContact(tx, reverseContact)
 				if err != nil {
 					return err

@@ -42,7 +42,9 @@ func LookupDirectChat(uid1, uid2 int, withDeleted bool) (int, error) {
 		mods = append(mods, qm.WithDeleted())
 	}
 	contact, err := models.Contacts(mods...).One(common.GetDB())
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return 0, nil
+	} else if err != nil {
 		return 0, err
 	}
 	return contact.Cid, nil

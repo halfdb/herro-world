@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"database/sql"
 	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
@@ -19,8 +18,6 @@ const (
 	keyPassword      = "password"
 )
 
-// TODO refactor
-
 func convertUser(user *models.User) *dto.User {
 	result := &dto.User{
 		Uid:           user.UID,
@@ -34,18 +31,20 @@ func convertUser(user *models.User) *dto.User {
 }
 
 func GetUserInfo(c echo.Context) error {
-	uid, err := parsePathInt(c, "uid")
+	var uid int
+	err := echo.PathParamsBinder(c).Int(keyUid, &uid).BindError()
 	if err != nil {
 		c.Logger().Error("failed to extract uid")
 		return err
 	}
 
 	user, err := dao.FetchUser(uid)
-	if err == sql.ErrNoRows {
-		return echo.ErrNotFound
-	} else if err != nil {
+	if err != nil {
 		c.Logger().Error("failed to fetch user")
 		return err
+	}
+	if user == nil {
+		return echo.ErrNotFound
 	}
 	// hide login name
 	if authorization.GetUid(c) != user.UID && !user.ShowLoginName {
@@ -59,11 +58,12 @@ func PatchUserInfo(c echo.Context) error {
 	uid := authorization.GetUid(c)
 
 	user, err := dao.FetchUser(uid)
-	if err == sql.ErrNoRows {
-		return echo.ErrNotFound
-	} else if err != nil {
+	if err != nil {
 		c.Logger().Error("failed to fetch user")
 		return err
+	}
+	if user == nil {
+		return echo.ErrNotFound
 	}
 
 	values := c.QueryParams()
@@ -71,8 +71,10 @@ func PatchUserInfo(c echo.Context) error {
 		c.Logger().Error("no parameters provided")
 		return echo.ErrBadRequest
 	}
-	updates := 0
+	update := false
 	for key, strings := range values {
+		// /api?key=value1&key=value2
+		// strings = [value1, value2]
 		value := strings[0]
 		if value == "" {
 			continue
@@ -81,7 +83,7 @@ func PatchUserInfo(c echo.Context) error {
 		case keyNickname:
 			if user.Nickname.Valid && user.Nickname.String != value {
 				user.Nickname = null.StringFrom(value)
-				updates += 1
+				update = true
 			}
 		case keyShowLoginName:
 			result, err := strconv.ParseBool(value)
@@ -90,12 +92,12 @@ func PatchUserInfo(c echo.Context) error {
 			}
 			if user.ShowLoginName != result {
 				user.ShowLoginName = result
-				updates += 1
+				update = true
 			}
 		case keyPassword:
 			if user.Password != value {
 				user.Password = value
-				updates += 1
+				update = true
 			}
 		default:
 			c.Logger().Error("unrecognised query param: " + key)
@@ -103,7 +105,7 @@ func PatchUserInfo(c echo.Context) error {
 		}
 	}
 
-	if updates > 0 {
+	if update {
 		if err := dao.UpdateUser(user); err != nil {
 			c.Logger().Error("failed to update user")
 			return err
