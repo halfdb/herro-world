@@ -14,7 +14,7 @@ CREATE TABLE `user` (
 
 `created_at` TIMESTAMP NOT NULL,
 `updated_at` TIMESTAMP NOT NULL,
-`deleted_at` TIMESTAMP,
+`deleted_at` TIMESTAMP NULL,
 PRIMARY KEY (`uid`),
 -- ログインネームにユニーク制約
 UNIQUE (`login_name`)
@@ -30,7 +30,7 @@ CREATE TABLE `chat` (
 
 `created_at` TIMESTAMP NOT NULL,
 `updated_at` TIMESTAMP NOT NULL,
-`deleted_at` TIMESTAMP,
+`deleted_at` TIMESTAMP NULL,
 PRIMARY KEY (`cid`)
 );
 
@@ -46,7 +46,7 @@ CREATE TABLE `contact` (
 
 `created_at` TIMESTAMP NOT NULL,
 `updated_at` TIMESTAMP NOT NULL,
-`deleted_at` TIMESTAMP,
+`deleted_at` TIMESTAMP NULL,
 `blocked_at` TIMESTAMP,
 -- 両方のUIDの組み合わせが主キーになる
 PRIMARY KEY (`uid_self`, `uid_other`),
@@ -62,7 +62,7 @@ CREATE TABLE `user_chat` (
 `cid` INT NOT NULL,
 
 `created_at` TIMESTAMP NOT NULL,
-`deleted_at` TIMESTAMP,
+`deleted_at` TIMESTAMP NULL,
 -- 組み合わせが主キー
 PRIMARY KEY (`uid`, `cid`),
 CONSTRAINT user_chat_ibfk_1 FOREIGN KEY (`uid`) REFERENCES `user`(`uid`),
@@ -83,7 +83,7 @@ CREATE TABLE `message` (
 -- 発信したtimestamp
 `created_at` TIMESTAMP NOT NULL,
 `updated_at` TIMESTAMP NOT NULL,
-`deleted_at` TIMESTAMP,
+`deleted_at` TIMESTAMP NULL,
 PRIMARY KEY (`mid`),
 CONSTRAINT message_ibfk_1 FOREIGN KEY (`uid`) REFERENCES `user`(`uid`),
 CONSTRAINT message_ibfk_2 FOREIGN KEY (`cid`) REFERENCES `chat`(`cid`)
