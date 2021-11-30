@@ -14,8 +14,13 @@ func LookupUser(loginName, password string) (*models.User, error) {
 	users, err := models.Users(models.UserWhere.LoginName.EQ(loginName), models.UserWhere.Password.EQ(password)).All(common.GetDB())
 	if err != nil {
 		return nil, err
-	} else if len(users) > 1 {
+	}
+	if len(users) > 1 {
 		return nil, errors.New("more than 1 user found")
+	}
+
+	if len(users) == 0 {
+		return nil, nil
 	} else {
 		return users[0], nil
 	}
