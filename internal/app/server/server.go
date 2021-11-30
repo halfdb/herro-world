@@ -31,8 +31,8 @@ func New(address string, db *sql.DB) error {
 
 	// Routes
 	e.GET("/", controller.Herro)
-	e.POST("/users", controller.Register(db))
-	e.POST("/login", controller.Validator(db))
+	e.POST("/users", controller.Register)
+	e.POST("/login", controller.Login)
 	e.GET("/users/:uid", controller.GetUserInfo)
 	e.PATCH("/users/:uid", controller.PatchUserInfo, authorization.AuthorizeSelf)
 	e.POST("/users/:uid/contacts", controller.PostContacts, authorization.AuthorizeSelf)
