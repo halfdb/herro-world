@@ -41,6 +41,9 @@ func Login(c echo.Context) error {
 		return err
 	}
 	user, err := dao.LookupUser(loginName, password)
+	if err != nil {
+		return err
+	}
 	if user == nil {
 		return echo.ErrUnauthorized
 	}

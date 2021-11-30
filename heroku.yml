@@ -1,0 +1,17 @@
+setup:
+  addons:
+    - plan: cleardb:ignite
+build:
+  docker:
+    web:
+      dockerfile: Dockerfile
+      target: production
+    release:
+      dockerfile: Dockerfile
+      target: builder
+release:
+  command:
+    - make db-up
+  image: release
+run:
+  web: /herro-world
