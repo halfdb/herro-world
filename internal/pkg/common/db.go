@@ -10,14 +10,14 @@ func GetDB() *sql.DB {
 	return boil.GetDB().(*sql.DB)
 }
 
-func BeginTx() (*sql.Tx, error) {
+func beginTx() (*sql.Tx, error) {
 	return GetDB().BeginTx(context.Background(), nil)
 }
 
 type TxFn func(*sql.Tx) error
 
 func DoInTx(fn TxFn) error {
-	tx, err := BeginTx()
+	tx, err := beginTx()
 	if err != nil {
 		return err
 	}
@@ -32,5 +32,6 @@ func DoInTx(fn TxFn) error {
 		}
 	}()
 
-	return fn(tx)
+	err = fn(tx) // capture err to let deferred function to handle it
+	return err
 }

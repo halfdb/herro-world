@@ -20,52 +20,43 @@ func FetchUserChat(uid, cid int, withDeleted bool) (*models.UserChat, error) {
 	if withDeleted {
 		mods = append(mods, qm.WithDeleted())
 	}
-	return models.UserChats(mods...).One(common.GetDB())
+	userChat, err := models.UserChats(mods...).One(common.GetDB())
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return userChat, err
 }
 
-func CreateUserChat(executor boil.Executor, uid, cid int) (*models.UserChat, error) {
-	userChat := &models.UserChat{
-		UID: uid,
-		Cid: cid,
-	}
-	err := userChat.Insert(executor, boil.Infer())
+func CreateUserChat(tx *sql.Tx, userChat *models.UserChat) (*models.UserChat, error) {
+	err := userChat.Insert(tx, boil.Infer())
 	if err != nil {
 		return nil, err
 	}
 	return userChat, nil
 }
 
-func DeleteUserChat(executor boil.Executor, uid, cid int) error {
-	userChat := &models.UserChat{
-		UID:       uid,
-		Cid:       cid,
-		DeletedAt: null.NewTime(time.Now(), true),
-	}
-	return updateUserChat(executor, userChat)
+func DeleteUserChat(tx *sql.Tx, userChat *models.UserChat) error {
+	userChat.DeletedAt = null.NewTime(time.Now(), true)
+	return updateUserChat(tx, userChat)
 }
 
-func RestoreUserChat(executor boil.Executor, uid, cid int) error {
-	userChat := &models.UserChat{
-		UID:       uid,
-		Cid:       cid,
-		DeletedAt: null.Time{Valid: false},
-	}
-	return updateUserChat(executor, userChat)
+func RestoreUserChat(tx *sql.Tx, userChat *models.UserChat) error {
+	userChat.DeletedAt.Valid = false
+	return updateUserChat(tx, userChat)
 }
 
-func updateUserChat(executor boil.Executor, userChat *models.UserChat) error {
-	rowsAff, err := userChat.Update(executor, boil.Infer())
-	if rowsAff == 0 {
-		return sql.ErrNoRows
-	} else if err != nil {
+func updateUserChat(tx *sql.Tx, userChat *models.UserChat) error {
+	rowsAff, err := userChat.Update(tx, boil.Infer())
+	if err != nil {
 		return err
-	} else if rowsAff != 1 {
+	}
+	if rowsAff != 1 {
 		return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 	}
 	return nil
 }
 
-func GetMemberUids(withDeleted bool, cids ...int) (map[int][]int, error) {
+func LookupMemberUids(withDeleted bool, cids ...int) (map[int][]int, error) {
 	mods := append(make([]qm.QueryMod, 0),
 		models.UserChatWhere.Cid.IN(cids),
 	)

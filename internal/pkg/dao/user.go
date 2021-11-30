@@ -2,37 +2,54 @@ package dao
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/models"
-	"github.com/labstack/echo/v4"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+	"strconv"
 )
 
-func UpdateUser(uid int, updates models.M) error {
-	tx, err := common.BeginTx()
+// LookupUser finds the user with specified login name and password, raises error if more than 1 is found
+func LookupUser(loginName, password string) (*models.User, error) {
+	users, err := models.Users(models.UserWhere.LoginName.EQ(loginName), models.UserWhere.Password.EQ(password)).All(common.GetDB())
 	if err != nil {
-		return err
+		return nil, err
+	} else if len(users) > 1 {
+		return nil, errors.New("more than 1 user found")
+	} else {
+		return users[0], nil
 	}
-	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback()
-			panic(p) // re-throw panic after Rollback
-		} else if err != nil {
-			_ = tx.Rollback() // err is non-nil; don't change it
-		} else {
-			err = tx.Commit() // err is nil; if Commit returns error update err
+}
+
+func CreateUser(tx *sql.Tx, user *models.User) (*models.User, error) {
+	err := user.Insert(tx, boil.Infer())
+	return user, err
+}
+
+func ExistUserLoginName(loginName string) (bool, error) {
+	count, err := models.Users(models.UserWhere.LoginName.EQ(loginName)).Count(common.GetDB())
+	return count > 0, err
+}
+
+func UpdateUser(user *models.User) error {
+	return common.DoInTx(func(tx *sql.Tx) error {
+		rowsAff, err := user.Update(tx, boil.Infer())
+		if err != nil {
+			return err
 		}
-	}()
-	rowsAff, err := models.Users(models.UserWhere.UID.EQ(uid)).UpdateAll(tx, updates)
-	if rowsAff == 0 {
-		return sql.ErrNoRows
-	} else if rowsAff != 1 || err != nil {
-		return echo.ErrInternalServerError
-	}
-	return nil
+		if rowsAff != 1 {
+			return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
+		}
+		return nil
+	})
 }
 
 func FetchUser(uid int) (*models.User, error) {
-	return models.Users(models.UserWhere.UID.EQ(uid)).One(common.GetDB())
+	user, err := models.Users(models.UserWhere.UID.EQ(uid)).One(common.GetDB())
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return user, err
 }
 
 func FetchUsers(uids ...int) (models.UserSlice, error) {

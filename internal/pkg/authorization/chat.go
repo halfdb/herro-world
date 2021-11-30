@@ -1,7 +1,6 @@
 package authorization
 
 import (
-	"database/sql"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
 	"github.com/labstack/echo/v4"
@@ -27,9 +26,7 @@ func AuthorizeChatMember(next echo.HandlerFunc) echo.HandlerFunc {
 		errCh := make(chan error, 2) // shared error channel
 		go func() {
 			userChat, err := dao.FetchUserChat(uid, cid, true)
-			if err == sql.ErrNoRows {
-				userChatCh <- nil // use nil to imply no result
-			} else if err != nil {
+			if err != nil {
 				errCh <- err
 				close(userChatCh)
 			} else {

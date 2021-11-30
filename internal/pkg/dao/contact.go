@@ -21,21 +21,19 @@ func FetchContact(uidSelf, uidOther int, withDeleted bool) (*models.Contact, err
 	if withDeleted {
 		mods = append(mods, qm.WithDeleted())
 	}
-	return models.Contacts(mods...).One(common.GetDB())
-}
-
-func ContactExists(uidSelf, uidOther int, withDeleted bool) (bool, error) {
-	_, err := FetchContact(uidSelf, uidOther, withDeleted)
-	if err == sql.ErrNoRows { // no row
-		return false, nil
-	} else if err != nil { // error
-		return false, err
-	} else { // exists
-		return true, nil
+	contact, err := models.Contacts(mods...).One(common.GetDB())
+	if err == sql.ErrNoRows {
+		return nil, nil
 	}
+	return contact, err
 }
 
-func FetchAllContacts(uid int, withDeleted bool, withBlocked bool) (models.ContactSlice, error) {
+func ExistContact(uidSelf, uidOther int, withDeleted bool) (bool, error) {
+	contact, err := FetchContact(uidSelf, uidOther, withDeleted)
+	return contact != nil, err
+}
+
+func LookupAllContacts(uid int, withDeleted bool, withBlocked bool) (models.ContactSlice, error) {
 	mods := append(make([]qm.QueryMod, 0),
 		qm.Select(models.ContactColumns.UIDOther, models.ContactColumns.DisplayName, models.ContactColumns.Cid),
 		models.ContactWhere.UIDSelf.EQ(uid),
@@ -49,46 +47,42 @@ func FetchAllContacts(uid int, withDeleted bool, withBlocked bool) (models.Conta
 	return models.Contacts(mods...).All(common.GetDB())
 }
 
-func UpdateContact(executor boil.Executor, uidSelf, uidOther int, updates models.M) error {
-	rowsAff, err := models.Contacts(
-		models.ContactWhere.UIDSelf.EQ(uidSelf),
-		models.ContactWhere.UIDOther.EQ(uidOther),
-	).UpdateAll(executor, updates)
-	if rowsAff == 0 {
-		return sql.ErrNoRows
-	} else if err != nil {
+func UpdateContact(tx *sql.Tx, contact *models.Contact) error {
+	rowsAff, err := contact.Update(tx, boil.Infer())
+	if err != nil {
 		return err
-	} else if rowsAff != 1 {
+	}
+	if rowsAff != 1 {
 		return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 	}
 	return nil
 }
 
-func CreateContact(executor boil.Executor, contact *models.Contact, createChat bool) (*models.Contact, error) {
+func CreateContact(tx *sql.Tx, contact *models.Contact, createChat bool) (*models.Contact, error) {
 	if createChat {
 		// create chat in advance
-		chat, err := CreateChat(executor, nil, true, contact.UIDSelf, contact.UIDOther) // direct chat does not have a name
+		chat := &models.Chat{
+			Direct: true,
+		}
+		chat, err := CreateChat(tx, chat, contact.UIDSelf, contact.UIDOther) // direct chat does not have a name
 		if err != nil {
 			return nil, err
 		}
 		contact.Cid = chat.Cid
 	}
 	// insert the new contact
-	if err := contact.Insert(executor, boil.Infer()); err != nil {
+	if err := contact.Insert(tx, boil.Infer()); err != nil {
 		return nil, err
 	}
 	return contact, nil
 }
 
-func DeleteContact(executor boil.Executor, uidSelf, uidOther int, block bool) error {
-	// fetch contact
-	contact, err := models.FindContact(executor, uidSelf, uidOther)
-	if err != nil {
-		return err
-	}
-
+func DeleteContact(tx *sql.Tx, contact *models.Contact, block bool) error {
 	// delete user_chat
-	err = DeleteUserChat(executor, uidSelf, contact.Cid)
+	err := DeleteUserChat(tx, &models.UserChat{
+		UID: contact.UIDSelf,
+		Cid: contact.Cid,
+	})
 	if err != nil {
 		return err
 	}
@@ -96,7 +90,7 @@ func DeleteContact(executor boil.Executor, uidSelf, uidOther int, block bool) er
 	// block
 	if block {
 		contact.BlockedAt = null.NewTime(time.Now(), true)
-		rowsAff, err := contact.Update(executor, boil.Infer())
+		rowsAff, err := contact.Update(tx, boil.Infer())
 		if err != nil {
 			return err
 		} else if rowsAff != 1 {
@@ -104,12 +98,11 @@ func DeleteContact(executor boil.Executor, uidSelf, uidOther int, block bool) er
 		}
 	}
 	// delete
-	rowsAff, err := contact.Delete(executor, false)
-	if rowsAff == 0 {
-		return sql.ErrNoRows
-	} else if err != nil {
-		return echo.ErrInternalServerError
-	} else if rowsAff != 1 {
+	rowsAff, err := contact.Delete(tx, false)
+	if err != nil {
+		return err
+	}
+	if rowsAff != 1 {
 		return errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 	}
 	return nil
@@ -119,11 +112,10 @@ func RestoreContact(executor boil.Executor, contact *models.Contact) (*models.Co
 	contact.DeletedAt.Valid = false
 	contact.BlockedAt.Valid = false
 	rowsAff, err := contact.Update(executor, boil.Infer())
-	if rowsAff == 0 {
-		return nil, sql.ErrNoRows
-	} else if err != nil {
+	if err != nil {
 		return nil, echo.ErrInternalServerError
-	} else if rowsAff != 1 {
+	}
+	if rowsAff != 1 {
 		return nil, errors.New("unexpected: rowsAff = " + strconv.FormatInt(rowsAff, 10))
 	}
 	return contact, nil

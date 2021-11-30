@@ -9,6 +9,7 @@ import (
 	"github.com/halfdb/herro-world/internal/pkg/models"
 	"github.com/halfdb/herro-world/pkg/dto"
 	"github.com/labstack/echo/v4"
+	"github.com/volatiletech/null/v8"
 	"net/http"
 )
 
@@ -33,12 +34,12 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 				groupCids = append(groupCids, chat.Cid)
 			}
 		}
-		directUids, err := dao.GetMemberUids(true, directCids...)
+		directUids, err := dao.LookupMemberUids(true, directCids...)
 		if err != nil {
 			close(uidsCh)
 			return
 		}
-		groupUids, err := dao.GetMemberUids(false, groupCids...)
+		groupUids, err := dao.LookupMemberUids(false, groupCids...)
 		// reuse directUids
 		for cid, uids := range groupUids {
 			directUids[cid] = uids
@@ -68,7 +69,7 @@ func makeChats(chats models.ChatSlice) ([]*dto.Chat, error) {
 
 func GetChats(c echo.Context) error {
 	uid := authorization.GetUid(c)
-	chats, err := dao.FetchAllChats(uid, false)
+	chats, err := dao.LookupAllChats(uid, false)
 	if err != nil {
 		return err
 	}
@@ -96,8 +97,7 @@ func PostChats(c echo.Context) error {
 	uid := authorization.GetUid(c)
 	uids := make([]int, 0)
 	name := ""
-	namePtr := &name
-	err := echo.QueryParamsBinder(c).Ints(keyUids, &uids).String(keyName, namePtr).BindError()
+	err := echo.QueryParamsBinder(c).Ints(keyUids, &uids).String(keyName, &name).BindError()
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func PostChats(c echo.Context) error {
 			hasSelf = true
 			continue
 		}
-		exists, err := dao.ContactExists(uid, uidOther, false)
+		exists, err := dao.ExistContact(uid, uidOther, false)
 		if err != nil {
 			return err
 		} else if !exists {
@@ -125,26 +125,14 @@ func PostChats(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if *namePtr == "" {
-		namePtr = nil
+	chat := &models.Chat{
+		Direct: false,
+		Name:   null.NewString(name, name != ""),
 	}
-
-	// begin tx
-	tx, err := common.BeginTx()
-	if err != nil {
+	err = common.DoInTx(func(tx *sql.Tx) error {
+		chat, err = dao.CreateChat(tx, chat, uids...)
 		return err
-	}
-	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback()
-			panic(p) // re-throw panic after Rollback
-		} else if err != nil {
-			_ = tx.Rollback() // err is non-nil; don't change it
-		} else {
-			err = tx.Commit() // err is nil; if Commit returns error update err
-		}
-	}()
-	chat, err := dao.CreateChat(tx, namePtr, false, uids...)
+	})
 	if err != nil {
 		return err
 	}
@@ -155,7 +143,7 @@ func PostChats(c echo.Context) error {
 func GetChatMembers(c echo.Context) error {
 	uid := authorization.GetUid(c)
 	cid := authorization.GetCid(c)
-	uidsMap, err := dao.GetMemberUids(false, cid)
+	uidsMap, err := dao.LookupMemberUids(false, cid)
 	if err != nil {
 		return err
 	}
@@ -193,7 +181,7 @@ func PostChatMembers(c echo.Context) error {
 		if uidOther == uid {
 			continue
 		}
-		exists, err := dao.ContactExists(uid, uidOther, false)
+		exists, err := dao.ExistContact(uid, uidOther, false)
 		if err != nil {
 			return err
 		} else if !exists {
@@ -204,15 +192,20 @@ func PostChatMembers(c echo.Context) error {
 	err = common.DoInTx(func(tx *sql.Tx) error {
 		for _, uidOther := range uids {
 			userChat, err := dao.FetchUserChat(uidOther, cid, true)
-			switch {
-			case err == sql.ErrNoRows: // user_chat does not exist, create it
-				userChat, err = dao.CreateUserChat(tx, uidOther, cid)
-			case err != nil: // error
-				// do nothing
-			case userChat.DeletedAt.Valid: // user_chat deleted, restore it
-				err = dao.RestoreUserChat(tx, uidOther, cid)
-			default: // user_chat exists
-				// do nothing
+			if err != nil {
+				return err
+			}
+			if userChat == nil { // user_chat does not exist, create it
+				userChat = &models.UserChat{
+					UID: uid,
+					Cid: cid,
+				}
+				userChat, err = dao.CreateUserChat(tx, userChat)
+			} else if userChat.DeletedAt.Valid { // user_chat deleted, restore it
+				err = dao.RestoreUserChat(tx, &models.UserChat{
+					UID: uidOther,
+					Cid: cid,
+				})
 			}
 			if err != nil {
 				return err
@@ -232,7 +225,10 @@ func DeleteChatMember(c echo.Context) error {
 	cid := authorization.GetCid(c)
 
 	err := common.DoInTx(func(tx *sql.Tx) error {
-		return dao.DeleteUserChat(tx, uid, cid)
+		return dao.DeleteUserChat(tx, &models.UserChat{
+			UID: uid,
+			Cid: cid,
+		})
 	})
 	if err != nil {
 		return err

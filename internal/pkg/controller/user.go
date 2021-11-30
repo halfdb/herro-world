@@ -1,12 +1,12 @@
 package controller
 
 import (
-	"database/sql"
 	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
 	"github.com/halfdb/herro-world/pkg/dto"
 	"github.com/labstack/echo/v4"
+	"github.com/volatiletech/null/v8"
 	"net/http"
 	"strconv"
 )
@@ -17,8 +17,6 @@ const (
 	keyShowLoginName = "show_login_name"
 	keyPassword      = "password"
 )
-
-// TODO refactor
 
 func convertUser(user *models.User) *dto.User {
 	result := &dto.User{
@@ -33,18 +31,20 @@ func convertUser(user *models.User) *dto.User {
 }
 
 func GetUserInfo(c echo.Context) error {
-	uid, err := parsePathInt(c, "uid")
+	var uid int
+	err := echo.PathParamsBinder(c).Int(keyUid, &uid).BindError()
 	if err != nil {
 		c.Logger().Error("failed to extract uid")
 		return err
 	}
 
 	user, err := dao.FetchUser(uid)
-	if err == sql.ErrNoRows {
-		return echo.ErrNotFound
-	} else if err != nil {
+	if err != nil {
 		c.Logger().Error("failed to fetch user")
 		return err
+	}
+	if user == nil {
+		return echo.ErrNotFound
 	}
 	// hide login name
 	if authorization.GetUid(c) != user.UID && !user.ShowLoginName {
@@ -57,38 +57,59 @@ func GetUserInfo(c echo.Context) error {
 func PatchUserInfo(c echo.Context) error {
 	uid := authorization.GetUid(c)
 
-	values := c.QueryParams()
-	updates := make(models.M)
-	for _, param := range []string{keyNickname, keyShowLoginName, keyPassword} {
-		value := values.Get(param)
-		if value != "" {
-			updates[param] = value
-		}
-	}
-	if len(updates) == 0 {
-		c.Logger().Error("no parameters provided")
-		return echo.ErrBadRequest
-	}
-	if values.Get(keyShowLoginName) != "" { // implies that updates[keyShowLoginName] must be set
-		var err error
-		updates[keyShowLoginName], err = strconv.ParseBool(updates[keyShowLoginName].(string))
-		if err != nil {
-			c.Logger().Error("invalid bool string")
-			return echo.ErrBadRequest
-		}
-	}
-
-	if err := dao.UpdateUser(uid, updates); err != nil {
-		if err != sql.ErrNoRows {
-			c.Logger().Error("failed to update user")
-			return err
-		}
-	}
-
 	user, err := dao.FetchUser(uid)
 	if err != nil {
 		c.Logger().Error("failed to fetch user")
 		return err
+	}
+	if user == nil {
+		return echo.ErrNotFound
+	}
+
+	values := c.QueryParams()
+	if len(values) == 0 {
+		c.Logger().Error("no parameters provided")
+		return echo.ErrBadRequest
+	}
+	update := false
+	for key, strings := range values {
+		// /api?key=value1&key=value2
+		// strings = [value1, value2]
+		value := strings[0]
+		if value == "" {
+			continue
+		}
+		switch key {
+		case keyNickname:
+			if user.Nickname.Valid && user.Nickname.String != value {
+				user.Nickname = null.StringFrom(value)
+				update = true
+			}
+		case keyShowLoginName:
+			result, err := strconv.ParseBool(value)
+			if err != nil {
+				return echo.ErrBadRequest
+			}
+			if user.ShowLoginName != result {
+				user.ShowLoginName = result
+				update = true
+			}
+		case keyPassword:
+			if user.Password != value {
+				user.Password = value
+				update = true
+			}
+		default:
+			c.Logger().Error("unrecognised query param: " + key)
+			return echo.ErrBadRequest
+		}
+	}
+
+	if update {
+		if err := dao.UpdateUser(user); err != nil {
+			c.Logger().Error("failed to update user")
+			return err
+		}
 	}
 	return c.JSON(http.StatusOK, convertUser(user))
 }
