@@ -14,7 +14,7 @@ herro-worldに使うAPIです。
 アカウント関連のAPI
 
 ## `POST /login`
-ログイン。成功した場合はJWTトークンを返します。その後のリクエストのheaderに`Authorization: Bearer <token_string>`を追加する必要があります。
+ログイン。引数はフォームで渡す。成功した場合はJWTトークンを返します。その後のリクエストのheaderに`Authorization: Bearer <token_string>`を追加する必要があります。
 
 
 ### パラメーター
@@ -33,7 +33,7 @@ herro-worldに使うAPIです。
 ```
 ---
 ## `POST /users`
-登録
+登録。引数はフォームで渡す。
 
 
 ### パラメーター

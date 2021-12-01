@@ -34,11 +34,19 @@ func signUser(user *models.User) (string, error) {
 	return token.SignedString([]byte(GetJWTSecret()))
 }
 
+func validateLoginName(loginName string) bool {
+	return loginName != ""
+}
+
+func validatePassword(password string) bool {
+	return password != ""
+}
+
 func Login(c echo.Context) error {
-	var loginName, password string
-	err := echo.QueryParamsBinder(c).String(keyLoginName, &loginName).String(keyPassword, &password).BindError()
-	if err != nil {
-		return err
+	loginName := c.FormValue(keyLoginName)
+	password := c.FormValue(keyPassword)
+	if !validateLoginName(loginName) || !validatePassword(password) {
+		return echo.ErrBadRequest
 	}
 	user, err := dao.LookupUser(loginName, password)
 	if err != nil {
@@ -60,14 +68,11 @@ func Login(c echo.Context) error {
 }
 
 func Register(c echo.Context) error {
-	var loginName, password, nickname string
-	err := echo.QueryParamsBinder(c).
-		String(keyLoginName, &loginName).
-		String(keyPassword, &password).
-		String(keyNickname, &nickname).
-		BindError()
-	if err != nil {
-		return err
+	loginName := c.FormValue(keyLoginName)
+	password := c.FormValue(keyPassword)
+	nickname := c.FormValue(keyNickname)
+	if !validateLoginName(loginName) || !validatePassword(password) {
+		return echo.ErrBadRequest
 	}
 
 	exists, err := dao.ExistUserLoginName(loginName)
