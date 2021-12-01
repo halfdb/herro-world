@@ -5,7 +5,9 @@ import (
 	"errors"
 	"github.com/halfdb/herro-world/internal/pkg/common"
 	"github.com/halfdb/herro-world/internal/pkg/models"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"strconv"
 )
 
@@ -28,6 +30,25 @@ func LookupUser(loginName, password string) (*models.User, error) {
 
 func CreateUser(tx *sql.Tx, user *models.User) (*models.User, error) {
 	err := user.Insert(tx, boil.Infer())
+	return user, err
+}
+
+func LookupUserNickname(nickname string) (models.UserSlice, error) {
+	nullNickname := null.NewString(nickname, true)
+	return models.Users(models.UserWhere.Nickname.EQ(nullNickname)).All(common.GetDB())
+}
+
+func LookupUserLoginName(loginName string, withHidden bool) (*models.User, error) {
+	mods := []qm.QueryMod{
+		models.UserWhere.LoginName.EQ(loginName),
+	}
+	if !withHidden {
+		mods = append(mods, models.UserWhere.ShowLoginName.EQ(true))
+	}
+	user, err := models.Users(mods...).One(common.GetDB())
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	return user, err
 }
 
