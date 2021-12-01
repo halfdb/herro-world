@@ -66,6 +66,32 @@
           ]
         },
         {
+          "description": "ユーザーを検索",
+          "methods": [
+            "POST"
+          ],
+          "path": "/users/search",
+          "params": [
+            "query",
+            {
+              "key": "by_nickname",
+              "mandatory": false,
+              "comment": "ニックネームで検索。デフォルトtrue。"
+            },
+            {
+              "key": "by_login_name",
+              "mandatory": false,
+              "comment": "ログイン名で検索。デフォルトtrue。ログイン名があっても、ログイン名非表示設定のユーザーは出ません。"
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json"
+            }
+          ]
+        },
+        {
           "description": "自分の情報を更新",
           "methods": [
             "PATCH"

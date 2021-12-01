@@ -57,6 +57,22 @@ herro-worldに使うAPIです。
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json
 
 ---
+## `POST /users/search`
+ユーザーを検索
+
+
+### パラメーター
+
+| フィールド | 必須 | コメント |
+|---|---|---|
+|`query` | `true` | |
+|`by_nickname` | `false` | ニックネームで検索。デフォルトtrue。 |
+|`by_login_name` | `false` | ログイン名で検索。デフォルトtrue。ログイン名があっても、ログイン名非表示設定のユーザーは出ません。 |
+
+### 戻り値
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
+
+---
 ## `PATCH /users/:uid`
 自分の情報を更新
 
