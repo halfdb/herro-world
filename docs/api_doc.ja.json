@@ -12,7 +12,7 @@
       "description": "アカウント関連のAPI",
       "list": [
         {
-          "description": "ログイン。成功した場合はJWTトークンを返します。その後のリクエストのheaderに`Authorization: Bearer <token_string>`を追加する必要があります。",
+          "description": "ログイン。引数はフォームで渡す。成功した場合はJWTトークンを返します。その後のリクエストのheaderに`Authorization: Bearer <token_string>`を追加する必要があります。",
           "methods": [
             "POST"
           ],
@@ -31,7 +31,7 @@
           "return_example": "{ \"token\": \"token_string\" }"
         },
         {
-          "description": "登録",
+          "description": "登録。引数はフォームで渡す。",
           "path": "/users",
           "methods": [
             "POST"
@@ -62,6 +62,32 @@
             {
               "status_code": 200,
               "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json"
+            }
+          ]
+        },
+        {
+          "description": "ユーザーを検索",
+          "methods": [
+            "POST"
+          ],
+          "path": "/users/search",
+          "params": [
+            "query",
+            {
+              "key": "by_nickname",
+              "mandatory": false,
+              "comment": "ニックネームで検索。デフォルトtrue。"
+            },
+            {
+              "key": "by_login_name",
+              "mandatory": false,
+              "comment": "ログイン名で検索。デフォルトtrue。ログイン名があっても、ログイン名非表示設定のユーザーは出ません。"
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json"
             }
           ]
         },

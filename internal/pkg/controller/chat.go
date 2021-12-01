@@ -152,10 +152,7 @@ func GetChatMembers(c echo.Context) error {
 	userSlice, err := dao.FetchUsers(uids...)
 	users := make([]*dto.User, len(userSlice))
 	for i, user := range userSlice {
-		if user.UID != uid && !user.ShowLoginName {
-			user.LoginName = ""
-		}
-		users[i] = convertUser(user)
+		users[i] = convertUser(user, user.UID != uid)
 	}
 
 	return c.JSON(http.StatusOK, users)

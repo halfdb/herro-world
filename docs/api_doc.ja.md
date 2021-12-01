@@ -14,7 +14,7 @@ herro-worldに使うAPIです。
 アカウント関連のAPI
 
 ## `POST /login`
-ログイン。成功した場合はJWTトークンを返します。その後のリクエストのheaderに`Authorization: Bearer <token_string>`を追加する必要があります。
+ログイン。引数はフォームで渡す。成功した場合はJWTトークンを返します。その後のリクエストのheaderに`Authorization: Bearer <token_string>`を追加する必要があります。
 
 
 ### パラメーター
@@ -33,7 +33,7 @@ herro-worldに使うAPIです。
 ```
 ---
 ## `POST /users`
-登録
+登録。引数はフォームで渡す。
 
 
 ### パラメーター
@@ -55,6 +55,22 @@ herro-worldに使うAPIです。
 
 ### 戻り値
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json
+
+---
+## `POST /users/search`
+ユーザーを検索
+
+
+### パラメーター
+
+| フィールド | 必須 | コメント |
+|---|---|---|
+|`query` | `true` | |
+|`by_nickname` | `false` | ニックネームで検索。デフォルトtrue。 |
+|`by_login_name` | `false` | ログイン名で検索。デフォルトtrue。ログイン名があっても、ログイン名非表示設定のユーザーは出ません。 |
+
+### 戻り値
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
 
 ---
 ## `PATCH /users/:uid`

@@ -16,13 +16,18 @@ const (
 	keyNickname      = "nickname"
 	keyShowLoginName = "show_login_name"
 	keyPassword      = "password"
+	keyQuery         = "query"
+	keyByNickname    = "by_nickname"
+	keyByLoginName   = "by_login_name"
 )
 
-func convertUser(user *models.User) *dto.User {
+func convertUser(user *models.User, respectShowLoginName bool) *dto.User {
 	result := &dto.User{
 		Uid:           user.UID,
-		LoginName:     user.LoginName,
 		ShowLoginName: user.ShowLoginName,
+	}
+	if user.ShowLoginName || !respectShowLoginName {
+		result.LoginName = user.LoginName
 	}
 	if user.Nickname.Valid {
 		result.Nickname = user.Nickname.String
@@ -46,11 +51,8 @@ func GetUserInfo(c echo.Context) error {
 	if user == nil {
 		return echo.ErrNotFound
 	}
-	// hide login name
-	if authorization.GetUid(c) != user.UID && !user.ShowLoginName {
-		user.LoginName = ""
-	}
-	return c.JSON(http.StatusOK, convertUser(user))
+
+	return c.JSON(http.StatusOK, convertUser(user, authorization.GetUid(c) != user.UID))
 }
 
 // PatchUserInfo asserts user is authorized, so the uid in token is same with that in query params
@@ -111,5 +113,46 @@ func PatchUserInfo(c echo.Context) error {
 			return err
 		}
 	}
-	return c.JSON(http.StatusOK, convertUser(user))
+	return c.JSON(http.StatusOK, convertUser(user, false))
+}
+
+func SearchUser(c echo.Context) error {
+	uid := authorization.GetUid(c)
+	query := ""
+	byNickname := true
+	byLoginName := true
+	err := echo.QueryParamsBinder(c).
+		String(keyQuery, &query).
+		Bool(keyByNickname, &byNickname).
+		Bool(keyByLoginName, &byLoginName).
+		BindError()
+	c.Logger().Debug(keyQuery + query)
+	c.Logger().Debug(keyByNickname + strconv.FormatBool(byNickname))
+	c.Logger().Debug(keyByLoginName + strconv.FormatBool(byLoginName))
+	if err != nil {
+		return err
+	}
+	results := make([]*dto.User, 0)
+	if byLoginName {
+		user, err := dao.LookupUserLoginName(query, false)
+		if err != nil {
+			return err
+		}
+		if user != nil {
+			results = append(results, convertUser(user, uid != user.UID))
+		}
+	}
+	if byNickname {
+		users, err := dao.LookupUserNickname(query)
+		if err != nil {
+			return err
+		}
+		dtoUsers := make([]*dto.User, len(users))
+		for i, user := range users {
+			dtoUsers[i] = convertUser(user, uid != user.UID)
+		}
+		results = append(results, dtoUsers...)
+	}
+
+	return c.JSON(http.StatusOK, results)
 }
