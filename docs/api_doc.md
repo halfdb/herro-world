@@ -13,7 +13,7 @@ Document for Chat APIs
 Account related APIs
 
 ## `POST /login`
-Login with login_name and password
+Login with login_name and password. Params should be passed in form data.
 
 
 ### Params
@@ -33,7 +33,7 @@ Login with login_name and password
 ```
 ---
 ## `POST /users`
-Register
+Register. Params should be passed in form data.
 
 
 ### Params
@@ -55,6 +55,22 @@ Read a user's info.
 
 ### Return
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json
+
+---
+## `POST /users/search`
+Search a user
+
+
+### Params
+
+| Field name | Mandatory | Comment |
+|---|---|---|
+|`query` | `true` | |
+|`by_nickname` | `false` | Search by nickname. True by default. |
+|`by_login_name` | `false` | Search by login name. True by default. Users whose login names are hidden will not be listed. |
+
+### Return
+- `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json
 
 ---
 ## `POST /users/:uid`

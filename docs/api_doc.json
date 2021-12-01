@@ -12,7 +12,7 @@
       "description": "Account related APIs",
       "list": [
         {
-          "description": "Login with login_name and password",
+          "description": "Login with login_name and password. Params should be passed in form data.",
           "methods": ["POST"],
           "params": [
             "login_name",
@@ -29,7 +29,7 @@
           "return_example": "{ \"token\": \"token_string\" }"
         },
         {
-          "description": "Register",
+          "description": "Register. Params should be passed in form data.",
           "path": "/users",
           "methods": ["POST"],
           "params": [
@@ -53,6 +53,32 @@
             {
               "status_code": 200,
               "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json"
+            }
+          ]
+        },
+        {
+          "description": "Search a user",
+          "methods": [
+            "POST"
+          ],
+          "path": "/users/search",
+          "params": [
+            "query",
+            {
+              "key": "by_nickname",
+              "mandatory": false,
+              "comment": "Search by nickname. True by default."
+            },
+            {
+              "key": "by_login_name",
+              "mandatory": false,
+              "comment": "Search by login name. True by default. Users whose login names are hidden will not be listed."
+            }
+          ],
+          "returns": [
+            {
+              "status_code": 200,
+              "schema": "https://raw.githubusercontent.com/halfdb/herro-world/main/schema/users.json"
             }
           ]
         },
