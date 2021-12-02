@@ -84,10 +84,11 @@ herro-worldに使うAPIです。
 |`nickname` | `false` |  |
 |`show_login_name` | `false` |  |
 |`password` | `false` |  |
+|`public_key` | `false` | base64 |
 
 ### 戻り値
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json
-- `400`: `nickname`, `show_login_name`, `password`中の一つ以上を指定ください
+- `400`: `nickname`, `show_login_name`, `password`, `public_key`の中の一つ以上を指定ください
 
 
 # コンタクト管理

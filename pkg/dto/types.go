@@ -5,6 +5,7 @@ type User struct {
 	LoginName     string `boil:"login_name" json:"login_name,omitempty"`
 	Nickname      string `boil:"nickname" json:"nickname,omitempty"`
 	ShowLoginName bool   `boil:"show_login_name" json:"show_login_name"`
+	PublicKey     string `boil:"public_key" json:"public_key,omitempty"`
 }
 
 type Contact struct {

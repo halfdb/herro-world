@@ -109,6 +109,11 @@
             {
               "key": "password",
               "mandatory": false
+            },
+            {
+              "key": "public_key",
+              "mandatory": false,
+              "comment": "base64"
             }
           ],
           "returns": [
@@ -118,7 +123,7 @@
             },
             {
               "status_code": 400,
-              "description": "`nickname`, `show_login_name`, `password`中の一つ以上を指定ください"
+              "description": "`nickname`, `show_login_name`, `password`, `public_key`の中の一つ以上を指定ください"
             }
           ]
         }

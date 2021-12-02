@@ -84,10 +84,11 @@ Update user info of oneself.
 |`nickname` | `false` |  |
 |`show_login_name` | `false` |  |
 |`password` | `false` |  |
+|`public_key` | `false` | base64 |
 
 ### Return
 - `200`: https://raw.githubusercontent.com/halfdb/herro-world/main/schema/user.json
-- `400`: At least one of `nickname`, `show_login_name`, `password` must be specified.
+- `400`: At least one of `nickname`, `show_login_name`, `password`, `public_key` must be specified.
 - `403`: Forbidden.
 
 

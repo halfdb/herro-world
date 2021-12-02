@@ -98,6 +98,11 @@
             {
               "key": "password",
               "mandatory": false
+            },
+            {
+              "key": "public_key",
+              "mandatory": false,
+              "comment": "base64"
             }
           ],
           "returns": [
@@ -107,7 +112,7 @@
             },
             {
               "status_code": 400,
-              "description": "At least one of `nickname`, `show_login_name`, `password` must be specified."
+              "description": "At least one of `nickname`, `show_login_name`, `password`, `public_key` must be specified."
             },
             403
           ]
