@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"bytes"
+	"encoding/base64"
 	"github.com/halfdb/herro-world/internal/pkg/authorization"
 	"github.com/halfdb/herro-world/internal/pkg/dao"
 	"github.com/halfdb/herro-world/internal/pkg/models"
@@ -16,6 +18,7 @@ const (
 	keyNickname      = "nickname"
 	keyShowLoginName = "show_login_name"
 	keyPassword      = "password"
+	keyPublicKey     = "public_key"
 	keyQuery         = "query"
 	keyByNickname    = "by_nickname"
 	keyByLoginName   = "by_login_name"
@@ -31,6 +34,9 @@ func convertUser(user *models.User, respectShowLoginName bool) *dto.User {
 	}
 	if user.Nickname.Valid {
 		result.Nickname = user.Nickname.String
+	}
+	if user.PublicKey.Valid {
+		result.PublicKey = base64.StdEncoding.EncodeToString(user.PublicKey.Bytes)
 	}
 	return result
 }
@@ -83,7 +89,7 @@ func PatchUserInfo(c echo.Context) error {
 		}
 		switch key {
 		case keyNickname:
-			if user.Nickname.Valid && user.Nickname.String != value {
+			if !user.Nickname.Valid || user.Nickname.String != value {
 				user.Nickname = null.StringFrom(value)
 				update = true
 			}
@@ -99,6 +105,18 @@ func PatchUserInfo(c echo.Context) error {
 		case keyPassword:
 			if user.Password != value {
 				user.Password = value
+				update = true
+			}
+		case keyPublicKey:
+			key, err := base64.StdEncoding.DecodeString(value)
+			if err != nil {
+				return err
+			}
+			if len(key) > 300 {
+				return echo.ErrBadRequest
+			}
+			if !user.PublicKey.Valid || bytes.Compare(user.PublicKey.Bytes, key) != 0 {
+				user.PublicKey = null.BytesFrom(key)
 				update = true
 			}
 		default:

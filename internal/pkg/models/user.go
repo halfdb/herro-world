@@ -28,6 +28,7 @@ type User struct {
 	Password      string      `boil:"password" json:"password" toml:"password" yaml:"password"`
 	Nickname      null.String `boil:"nickname" json:"nickname,omitempty" toml:"nickname" yaml:"nickname,omitempty"`
 	ShowLoginName bool        `boil:"show_login_name" json:"show_login_name" toml:"show_login_name" yaml:"show_login_name"`
+	PublicKey     null.Bytes  `boil:"public_key" json:"public_key,omitempty" toml:"public_key" yaml:"public_key,omitempty"`
 	CreatedAt     time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt     time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 	DeletedAt     null.Time   `boil:"deleted_at" json:"deleted_at,omitempty" toml:"deleted_at" yaml:"deleted_at,omitempty"`
@@ -42,6 +43,7 @@ var UserColumns = struct {
 	Password      string
 	Nickname      string
 	ShowLoginName string
+	PublicKey     string
 	CreatedAt     string
 	UpdatedAt     string
 	DeletedAt     string
@@ -51,6 +53,7 @@ var UserColumns = struct {
 	Password:      "password",
 	Nickname:      "nickname",
 	ShowLoginName: "show_login_name",
+	PublicKey:     "public_key",
 	CreatedAt:     "created_at",
 	UpdatedAt:     "updated_at",
 	DeletedAt:     "deleted_at",
@@ -62,6 +65,7 @@ var UserTableColumns = struct {
 	Password      string
 	Nickname      string
 	ShowLoginName string
+	PublicKey     string
 	CreatedAt     string
 	UpdatedAt     string
 	DeletedAt     string
@@ -71,6 +75,7 @@ var UserTableColumns = struct {
 	Password:      "user.password",
 	Nickname:      "user.nickname",
 	ShowLoginName: "user.show_login_name",
+	PublicKey:     "user.public_key",
 	CreatedAt:     "user.created_at",
 	UpdatedAt:     "user.updated_at",
 	DeletedAt:     "user.deleted_at",
@@ -78,12 +83,36 @@ var UserTableColumns = struct {
 
 // Generated where
 
+type whereHelpernull_Bytes struct{ field string }
+
+func (w whereHelpernull_Bytes) EQ(x null.Bytes) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Bytes) NEQ(x null.Bytes) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Bytes) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Bytes) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_Bytes) LT(x null.Bytes) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Bytes) LTE(x null.Bytes) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Bytes) GT(x null.Bytes) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Bytes) GTE(x null.Bytes) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
 var UserWhere = struct {
 	UID           whereHelperint
 	LoginName     whereHelperstring
 	Password      whereHelperstring
 	Nickname      whereHelpernull_String
 	ShowLoginName whereHelperbool
+	PublicKey     whereHelpernull_Bytes
 	CreatedAt     whereHelpertime_Time
 	UpdatedAt     whereHelpertime_Time
 	DeletedAt     whereHelpernull_Time
@@ -93,6 +122,7 @@ var UserWhere = struct {
 	Password:      whereHelperstring{field: "`user`.`password`"},
 	Nickname:      whereHelpernull_String{field: "`user`.`nickname`"},
 	ShowLoginName: whereHelperbool{field: "`user`.`show_login_name`"},
+	PublicKey:     whereHelpernull_Bytes{field: "`user`.`public_key`"},
 	CreatedAt:     whereHelpertime_Time{field: "`user`.`created_at`"},
 	UpdatedAt:     whereHelpertime_Time{field: "`user`.`updated_at`"},
 	DeletedAt:     whereHelpernull_Time{field: "`user`.`deleted_at`"},
@@ -115,8 +145,8 @@ func (*userR) NewStruct() *userR {
 type userL struct{}
 
 var (
-	userAllColumns            = []string{"uid", "login_name", "password", "nickname", "show_login_name", "created_at", "updated_at", "deleted_at"}
-	userColumnsWithoutDefault = []string{"login_name", "password", "nickname", "created_at", "updated_at", "deleted_at"}
+	userAllColumns            = []string{"uid", "login_name", "password", "nickname", "show_login_name", "public_key", "created_at", "updated_at", "deleted_at"}
+	userColumnsWithoutDefault = []string{"login_name", "password", "nickname", "public_key", "created_at", "updated_at", "deleted_at"}
 	userColumnsWithDefault    = []string{"uid", "show_login_name"}
 	userPrimaryKeyColumns     = []string{"uid"}
 )
