@@ -142,7 +142,7 @@ PRIMARY KEY (`uid_self`, `uid_other`)
 
 ユーザーが参加しているチャットの表。
 
-`left`ではなければ、記録されたユーザー`uid`は`cid`というチャットに入ってる。そのチャットからの受信は可能。
+`deleted_at == NULL`の場合、記録されたユーザー`uid`は`cid`というチャットに入ってる。そのチャットからの受信は可能。
 
 `deleted_at != NULL`の場合、`uid`はもう（グループの場合）退室したまたは（DMの場合）相手を削除・ブロックした。
 
@@ -151,7 +151,7 @@ PRIMARY KEY (`uid_self`, `uid_other`)
 | `uid` | INT | | ユーザーのuid、主キーの一部 |
 | `cid` | INT |  | チャットのcid、主キーの一部 |
 | `created_at` | TIMESTAMP | | 入室した時のtimestamp |
-| `deleted_at` | TIMESTAMP | NULL可能 | 退室した時のtimestamp |
+| `deleted_at` | TIMESTAMP | NULL可 | 退室した時のtimestamp |
 
 
 ```mysql
@@ -177,8 +177,8 @@ PRIMARY KEY (`uid`, `cid`)
 | `mid` | INT | AUTO_INCREMENT | 主キー |
 | `cid` | INT | | どのcidに投稿したのか |
 | `uid` | INT | | 発信者のuid |
-| `mime_id` | INT | | 内容のmime_id |
-| `content` | VARBINARY(200) | | 内容 |
+| `mime` | VARCHAR(40) | デフォルト値`'text/plain'` | 内容のmime |
+| `content` | VARBINARY(4096) | | 内容 |
 | `created_at` | TIMESTAMP | | 発信した時のtimestamp |
 
 ```mysql
@@ -192,7 +192,7 @@ CREATE TABLE `message` (
 -- 内容のmime
 `mime` VARCHAR(40) NOT NULL DEFAULT 'text/plain',
 -- 内容
-`content` VARBINARY(200) NOT NULL,
+`content` VARBINARY(4096) NOT NULL,
 -- 発信したtimestamp
 `created_at` TIMESTAMP NOT NULL,
 `updated_at` TIMESTAMP NOT NULL,
