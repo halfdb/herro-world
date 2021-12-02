@@ -43,6 +43,7 @@ DBについて、ユーザー、コンタクト、ユーザーの間のチャッ
 | `password` | VARCHAR(80) | | パスワード|
 | `nickname` | VARCHAR(40) | | ニックネーム |
 | `show_login_name` | BOOL | デフォルト値false | ログインネーム表示設定 |
+| `public_key` | VARBINARY(300) | NULL可 | 公開キー |
 
 
 ```mysql
@@ -57,6 +58,8 @@ CREATE TABLE `user` (
 `nickname` VARCHAR(40) NOT NULL,
 -- ログインネーム表示設定
 `show_login_name` BOOL NOT NULL DEFAULT false,
+-- 公開キー
+`public_key` VARBINARY(300) NULL,
 
 `created_at` TIMESTAMP NOT NULL,
 `updated_at` TIMESTAMP NOT NULL,
