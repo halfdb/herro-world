@@ -13,10 +13,14 @@ import (
 )
 
 const (
-	keyMime             = "mime"
-	keyContent          = "content"
-	defaultMessageLimit = 100
-	contentLengthLimit  = 200
+	keyMime              = "mime"
+	keyContent           = "content"
+	defaultMessageLimit  = 100
+	TextLengthLimit      = 100
+	EncryptedLengthLimit = 600
+
+	mimeTextPlain          = "text/plain"
+	mimeMultiPartEncrypted = "multipart/encrypted"
 )
 
 func convertMessage(message *models.Message) *dto.Message {
@@ -48,11 +52,27 @@ func GetMessages(c echo.Context) error {
 	return c.JSON(http.StatusOK, convertMessages(messages))
 }
 
+func validateMessage(message *models.Message) error {
+	switch message.Mime {
+	case mimeTextPlain:
+		if len(message.Content) > TextLengthLimit {
+			return echo.ErrStatusRequestEntityTooLarge
+		}
+	case mimeMultiPartEncrypted:
+		if len(message.Content) > EncryptedLengthLimit {
+			return echo.ErrStatusRequestEntityTooLarge
+		}
+	default:
+		return echo.ErrBadRequest
+	}
+	return nil
+}
+
 func PostMessage(c echo.Context) error {
 	// params
 	uid := authorization.GetUid(c)
 	cid := authorization.GetCid(c)
-	mime := "text/plain"
+	mime := mimeTextPlain
 	content := ""
 	err := echo.QueryParamsBinder(c).String(keyMime, &mime).String(keyContent, &content).BindError()
 	if err != nil {
@@ -61,8 +81,6 @@ func PostMessage(c echo.Context) error {
 	contentBytes, err := base64.StdEncoding.DecodeString(content)
 	if err != nil {
 		return echo.ErrBadRequest
-	} else if len(contentBytes) > contentLengthLimit {
-		return echo.ErrStatusRequestEntityTooLarge
 	}
 
 	// build message
@@ -71,6 +89,10 @@ func PostMessage(c echo.Context) error {
 		UID:     uid,
 		Mime:    mime,
 		Content: contentBytes,
+	}
+	err = validateMessage(message)
+	if err != nil {
+		return err
 	}
 
 	err = common.DoInTx(func(tx *sql.Tx) error { // add reverse contact and check if blocked
